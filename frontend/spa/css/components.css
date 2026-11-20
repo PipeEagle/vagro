@@ -1,0 +1,407 @@
+/* Componentes reutilizables */
+
+/* KpiCard */
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid #dce3db;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-card .kpi-value {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.kpi-card .kpi-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-card .kpi-icon {
+  font-size: var(--text-2xl);
+  opacity: 0.7;
+}
+
+/* StatusBadge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.25em 0.75em;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-activo { background: #d1e7dd; color: #0a3622; }
+.status-en-descanso { background: #fff3cd; color: #664d03; }
+.status-finalizado { background: #f8d7da; color: #58151c; }
+
+.status-fertilizacion { background: #cfe2ff; color: #052c65; }
+.status-fumigacion { background: #ffe69c; color: #664d03; }
+.status-poda { background: #d1e7dd; color: #0a3622; }
+.status-cosecha { background: #f8d7da; color: #58151c; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1055;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.modal-backdrop.visible {
+  opacity: 1;
+}
+
+.modal-panel {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  width: min(500px, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform var(--transition-base);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-backdrop.visible .modal-panel {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.modal-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: var(--text-xl);
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: var(--space-1);
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+/* Toast */
+.toast {
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-sm);
+  animation: slide-in 0.3s ease;
+}
+
+.toast-success { background: var(--color-success); }
+.toast-error { background: var(--color-danger); }
+.toast-warning { background: var(--color-warning); color: var(--text-primary); }
+.toast-info { background: var(--color-info); color: var(--text-primary); }
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.data-table th {
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+}
+
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid #dce3db;
+  font-size: var(--text-sm);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background: var(--bg-surface-hover);
+}
+
+/* EmptyState */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.empty-state-icon {
+  font-size: var(--text-3xl);
+  opacity: 0.4;
+  margin-bottom: var(--space-3);
+}
+
+/* LoadingState */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  gap: var(--space-3);
+}
+
+/* ErrorState */
+.error-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.error-state .error-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-danger);
+  margin-bottom: var(--space-2);
+}
+
+/* Navbar */
+.navbar-agro {
+  background: var(--bg-surface);
+  border-bottom: 1px solid #dce3db;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--color-primary) !important;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navbar-brand .brand-symbol {
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+/* Sidebar */
+.sidebar-agro {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  min-height: 100vh;
+  width: 260px;
+}
+
+.sidebar-agro a {
+  color: rgba(255, 255, 255, 0.85);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: 0;
+  transition: background var(--transition-fast);
+}
+
+.sidebar-agro a:hover,
+.sidebar-agro a.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-inverse);
+}
+
+.sidebar-agro .sidebar-header {
+  padding: var(--space-4);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: var(--space-3);
+}
+
+/* Calendario */
+.calendar-grid {
+  width: 100%;
+}
+
+.cal-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.cal-day-header {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  background: var(--bg-surface-hover);
+}
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  background: var(--bg-surface);
+  border: 1px solid #dce3db;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cal-cell:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.cal-cell.cal-hoy {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-color: var(--color-primary);
+}
+
+.cal-cell.cal-hoy .cal-fecha {
+  color: var(--text-inverse);
+}
+
+.cal-fecha {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.cal-evento {
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-event-fertilizacion { border-top: 3px solid var(--color-labor-fertilizacion); }
+.cal-event-fumigacion { border-top: 3px solid var(--color-labor-fumigacion); }
+.cal-event-poda { border-top: 3px solid var(--color-labor-poda); }
+.cal-event-cosecha { border-top: 3px solid var(--color-labor-cosecha); }
+
+/* Eventos individuales en el calendario */
+.cal-evento {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.cal-evento:hover {
+  opacity: 0.85;
+  filter: brightness(1.1);
+}
+
+.cal-evento.bg-success { color: #ffffff; }
+.cal-evento.bg-danger { color: #ffffff; }
+.cal-evento.bg-info { color: #000000; }
+.cal-evento.bg-warning { color: #000000; }
+.cal-evento.bg-secondary { color: #ffffff; }
+
+
+/* Avatar */
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Tarjetas de finca */
+.finca-card {
+  background: var(--bg-surface);
+  border: 2px solid #dce3db;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+}
+
+.finca-card:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-surface-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.finca-card.finca-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+}
+
+.finca-card.finca-selected .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informe del Proyecto Final - AgroGestion</title>
+  <style>
+    :root {
+      --primary: #1b5e20;
+      --primary-hover: #14531a;
+      --secondary: #6d4c41;
+      --accent: #e8f5e9;
+      --text: #26332b;
+      --text-muted: #68788a;
+      --border: #dce3db;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background: #fafafa;
+      padding: 0;
+    }
+    .cover {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      padding: 60px 40px;
+      text-align: center;
+      border-bottom: 8px solid var(--secondary);
+    }
+    .cover h1 { font-size: 2.5rem; margin-bottom: 12px; }
+    .cover h2 { font-size: 1.4rem; font-weight: 400; opacity: 0.95; }
+    .cover .meta { margin-top: 30px; font-size: 1rem; color: rgba(255,255,255,0.9); }
+    .cover .meta p { margin: 6px 0; }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    header.top-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      margin-bottom: 30px;
+    }
+    header.top-bar h1 { font-size: 1.5rem; color: var(--primary); }
+    header.top-bar p { color: var(--text-muted); font-size: 0.9rem; }
+    h2.section-title {
+      font-size: 1.5rem;
+      color: var(--primary);
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 8px;
+      margin: 40px 0 24px 0;
+    }
+    h3.subtitle {
+      font-size: 1.2rem;
+      color: var(--secondary);
+      margin: 28px 0 14px 0;
+    }
+    p { margin: 12px 0; text-align: justify; }
+    ul, ol { margin: 12px 0 12px 24px; }
+    li { margin: 6px 0; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .card h4 { margin-top: 0; color: var(--primary); font-size: 1.1rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+    }
+    th { background: var(--accent); color: var(--primary); font-weight: 700; }
+    code {
+      background: #f1f5ee;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      color: #1b5e20;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0;
+      font-size: 0.85rem;
+    }
+    .mermaid { text-align: center; margin: 24px 0; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin: 2px;
+    }
+    .badge-primary { background: var(--primary); color: #fff; }
+    .badge-secondary { background: var(--secondary); color: #fff; }
+    .badge-info { background: #0dcaf0; color: #000; }
+    .badge-warn { background: #ffc107; color: #000; }
+    .badge-danger { background: #dc3545; color: #fff; }
+    .toc {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+    .toc h3 { margin-top: 0; color: var(--primary); }
+    .toc ul { list-style: none; margin-left: 0; }
+    .toc li { margin: 8px 0; }
+    .toc li::before { content: "▹"; color: var(--primary); font-weight: 700; margin-right: 8px; }
+    .footer {
+      margin-top: 60px;
+      padding: 30px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .phase-tag {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-right: 6px;
+    }
+    .two-col {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .two-col > div { flex: 1; min-width: 300px; }
+  </style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>AgroGestion</h1>
+  <h2>Informe del Proyecto Final</h2>
+  <div class="meta">
+    <p><strong>Asignatura:</strong> Análisis, Diseño y Desarrollo de Aplicaciones Web Full Stack</p>
+    <p><strong>Tipo:</strong> Evaluación práctica de análisis, diseño arquitectónico, desarrollo e integración</p>
+    <p><strong>Ámbito:</strong> Gestión de labores agrícolas (café y plátano) con trazabilidad por código QR</p>
+    <p><strong>Stack:</strong> HTML5, CSS3, JavaScript (Vanilla), Bootstrap 5 · Flask, SQLAlchemy, Marshmallow · MySQL/MariaDB</p>
+  </div>
+</div>
+
+<div class="container">
+  <header class="top-bar">
+    <h1>Informe del Proyecto Final</h1>
+    <p>AgroGestion · Sistema de gestión y trazabilidad de labores agrícolas · Informe obligatorio para la calificación del proyecto</p>
+  </header>
+
+  <div class="card toc">
+    <h3>Tabla de contenidos</h3>
+    <ul>
+      <li><span class="phase-tag">Fase 01</span>Gestión comercial y atención inicial</li>
+      <li><span class="phase-tag">Fase 02</span>Descubrimiento, requisitos y contratación</li>
+      <li><span class="phase-tag">Fase 03</span>Scrum, arquitectura y diseño</li>
+      <li><span class="phase-tag">Fase 04</span>Preparación técnica</li>
+      <li><span class="phase-tag">Fase 05</span>Desarrollo incremental</li>
+      <li>Arquitectura computacional y diagrama de despliegue</li>
+      <li>Modelo lógico y físico de la base de datos</li>
+      <li>Diseño de la API REST y comunicación entre componentes</li>
+      <li>Diseño de seguridad</li>
+      <li>Decisiones arquitectónicas (ADR)</li>
+      <li>Consideraciones de calidad (rendimiento, escalabilidad, disponibilidad, costos, riesgos)</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Fase 01. Gestión comercial y atención inicial</h2>
+  <div class="card">
+    <h4>1.1 Contexto del cliente</h4>
+    <p>El cliente es un grupo de pequeños y medianos productores agrícolas dedicados al cultivo de <strong>café y plátano</strong> en zonas de altura. Necesitan una plataforma que permita registrar, consultar y dar trazabilidad a las labores realizadas en cada lote agrícola, asegurando transparencia entre trabajadores de campo y la administración.</p>
+    <h4>1.2 Necesidad detectada</h4>
+    <ul>
+      <li>Ausencia de un registro centralizado de labores (fertilización, fumigación, poda, riego, cosecha, siembra).</li>
+      <li>Dificultad para conocer el estado actual de un lote al escanear su código QR físico.</li>
+      <li>Falta de trazabilidad entre la aplicación de insumos y la cosecha final.</li>
+      <li>Necesidad de diferenciar niveles de acceso: trabajador de campo (público vía QR) y administrador (panel privado).</li>
+    </ul>
+    <h4>1.3 Alcance del proyecto</h4>
+    <p>Desarrollo de una aplicación web Full Stack tipo SPA que permita:</p>
+    <ul>
+      <li>Consulta pública de lotes mediante escaneo de código QR (sin autenticación).</li>
+      <li>Panel de administración autenticado con dashboard, gestión de lotes, labores, cultivos, insumos, fincas y usuarios.</li>
+      <li>Sincronización de información en todos los apartados mediante un estado global centralizado.</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Fase 02. Descubrimiento, requisitos y contratación</h2>
+  <div class="card">
+    <h4>2.1 Requisitos funcionales</h4>
+    <table>
+      <tr><th>ID</th><th>Requisito</th><th>Prioridad</th></tr>
+      <tr><td>RF01</td><td>Consulta pública de lote por código QR sin autenticación</td><td>Alta</td></tr>
+      <tr><td>RF02</td><td>Autenticación de administradores con roles (SUPERADMIN, ADMIN, MAYORDOMO)</td><td>Alta</td></tr>
+      <tr><td>RF03</td><td>Dashboard con KPIs dinámicos (hectáreas, labores pendientes, producción del mes)</td><td>Alta</td></tr>
+      <tr><td>RF04</td><td>Gestión CRUD de fincas, lotes, cultivos, labores, insumos y usuarios</td><td>Alta</td></tr>
+      <tr><td>RF05</td><td>Calendario de eventos y labores programadas por finca</td><td>Media</td></tr>
+      <tr><td>RF06</td><td>Selector global de finca activa para filtrar información</td><td>Media</td></tr>
+    </table>
+    <h4>2.2 Requisitos no funcionales</h4>
+    <ul>
+      <li><strong>Arquitectura:</strong> Monolito modular por capas (Controlador, Servicio, Repositorio, Entidad, DTO).</li>
+      <li><strong>Frontend:</strong> SPA vanilla JavaScript sin frameworks de interfaz (React/Angular/Vue prohibidos).</li>
+      <li><strong>Backend:</strong> Python 3.10+, Flask, API REST con códigos de estado HTTP y respuestas JSON.</li>
+      <li><strong>Base de datos:</strong> MySQL/MariaDB con persistencia mediante SQLAlchemy ORM.</li>
+      <li><strong>Seguridad:</strong> Autenticación con Flask-Login, hashing de contraseñas con Flask-Bcrypt, autorización por roles.</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Fase 03. Scrum, arquitectura y diseño</h2>
+  <div class="card">
+    <h4>3.1 Metodología Scrum aplicada</h4>
+    <p>El proyecto se organizó en entregas incrementales por módulo funcional. Cada sprint entregó un dominio completo con sus 5 capas backend y su correspondiente vista frontend, integrando pruebas de funcionamiento antes de pasar al siguiente módulo.</p>
+    <h4>3.2 Reglas de arquitectura (obligatorias)</h4>
+    <ul>
+      <li>No escribir lógica de negocio en los Controladores (solo rutas HTTP y respuestas).</li>
+      <li>No escribir consultas SQL/SQLAlchemy en los Servicios (delegar al Repositorio).</li>
+      <li>No acceder a la base de datos directamente desde los Controladores (usar Servicios).</li>
+      <li>Usar Type Hinting y Docstrings en todo el código Python.</li>
+      <li>Usar manejo de excepciones personalizado (AppException en shared/utils/).</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Fase 04. Preparación técnica</h2>
+  <div class="card">
+    <h4>4.1 Stack tecnológico</h4>
+    <table>
+      <tr><th>Capa</th><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr>
+      <tr><td>Frontend</td><td>HTML5 / CSS3 / JavaScript ES6+</td><td>Vanilla</td><td>SPA nativa, componentes reutilizables, enrutamiento y gestión de estado (store pub/sub)</td></tr>
+      <tr><td>Frontend UI</td><td>Bootstrap 5.3.3</td><td>5.3.3</td><td>Estilos y componentes responsivos vía CDN</td></tr>
+      <tr><td>Backend</td><td>Flask</td><td>3.x</td><td>Servidor web y API REST</td></tr>
+      <tr><td>ORM</td><td>Flask-SQLAlchemy</td><td>3.x</td><td>Mapeo objeto-relacional sobre MySQL</td></tr>
+      <tr><td>Migraciones</td><td>Flask-Migrate</td><td>4.x</td><td>Control de versiones del esquema de base de datos</td></tr>
+      <tr><td>Validación</td><td>Flask-Marshmallow</td><td>1.x</td><td>DTOs y serialización de entrada/salida</td></tr>
+      <tr><td>Autenticación</td><td>Flask-Login + Flask-Bcrypt</td><td>0.6.x / 1.x</td><td>Sesiones y hash de contraseñas</td></tr>
+      <tr><td>Base de datos</td><td>MySQL / MariaDB (XAMPP)</td><td>8.0 / 10.x</td><td>Persistencia de datos relacional</td></tr>
+      <tr><td>Pruebas</td><td>pytest</td><td>8.x</td><td>Pruebas unitarias del backend</td></tr>
+    </table>
+    <h4>4.2 Estructura del proyecto</h4>
+    <pre><code>agrogestion/
+├── backend/
+│   ├── app/
+│   │   ├── config.py
+│   │   ├── extensions.py
+│   │   └── modules/
+│   │       ├── usuarios/   (auth: control, servicio, repositorio, DTO, entidad)
+│   │       ├── lotes/      (consulta pública QR: 5 capas)
+│   │       ├── cultivos/   (catálogo: 5 capas)
+│   │       └── labores/    (registro de labores: 5 capas)
+│   ├── run.py
+│   ├── requirements.txt
+│   └── tests/
+├── database/
+│   └── init.sql          (esquema SQL y seed data)
+├── frontend/
+│   ├── spa/
+│   │   ├── index.html
+│   │   ├── css/ (tokens, base, components)
+│   │   └── js/ (app, router, store, services, components, views)
+├── AGENTS.md
+└── iniciar.ps1</code></pre>
+  </div>
+
+  <h2 class="section-title">Fase 05. Desarrollo incremental</h2>
+  <div class="card">
+    <h4>5.1 Módulo de usuarios (autenticación)</h4>
+    <p>Implementación completa de login/logout, protección de rutas por rol (SUPERADMIN, ADMIN, MAYORDOMO), y gestión de usuarios con asignación de finca. El controlador expone endpoints <code>POST /api/auth/login</code>, <code>POST /api/auth/logout</code> y <code>GET /api/auth/me</code>.</p>
+    <h4>5.2 Módulo de lotes (consulta pública QR)</h4>
+    <p>Endpoint público <code>GET /api/lotes/qr/&lt;codigo_qr&gt;</code> que devuelve datos del lote (nombre, estado, cultivo, hectáreas) solo si el lote está ACTIVO. No requiere autenticación.</p>
+    <h4>5.3 Módulo de cultivos (catálogo)</h4>
+    <p>API REST completa con operaciones CRUD sobre cultivos: listar, obtener por id, crear, actualizar y eliminar. Incluye validaciones de nombre único y campos obligatorios.</p>
+    <h4>5.4 Módulo de labores</h4>
+    <p>API REST completa para registro, consulta, actualización y eliminación de labores agrícolas (siembra, fertilización, fumigación, poda, riego, cosecha) asociadas a fincas y lotes.</p>
+    <h4>5.4 Frontend SPA</h4>
+    <p>Aplicación de una sola página con enrutamiento del lado del cliente, gestión de estado centralizada (<code>store.js</code> con patrón observador), componentes reutilizables (Modal, StatusBadge, KpiCard, FincaSelector) y vistas para dashboard, lotes, labores, cultivos, insumos, fincas, usuarios y calendario. Todos los apartados están sincronizados mediante el store global.</p>
+  </div>
+
+  <h2 class="section-title">Arquitectura computacional y diagrama de despliegue</h2>
+  <div class="card">
+    <h3>Diagrama C4 - Contexto</h3>
+    <div class="mermaid">
+%%{init: {'theme': 'base'}}%%%
+graph LR
+    subgraph Usuario["Usuario del sistema"]
+        T[Workinger de campo]
+        A[Administrador]
+    end
+    subgraph Web["Navegador web"]
+        SPA[SPA AgroGestion]
+    end
+    subgraph Backend["Servidor Flask"]
+        API[API REST]
+    end
+    subgraph DB["Base de datos MySQL/MariaDB"]
+        DB[(agrogestion)]
+    end
+    T -->|Escanea QR / navega| SPA
+    A -->|Autenticación y gestión| SPA
+    SPA -->|HTTP JSON| API
+    API -->|SQL| DB
+    </div>
+    <p class="footer" style="margin-top:8px; font-size:0.8rem;">C4 Contexto: usuarios interactúan con la SPA, esta consume la API REST y la API persiste en MySQL.</p>
+  </div>
+
+  <div class="card">
+    <h3>Diagrama C4 - Contenedores</h3>
+    <div class="mermaid">
+graph LR
+    subgraph Frontend["Frontend (SPA Vanilla JS)"]
+        UI[HTML/CSS/JS + Bootstrap]
+        Store[store.js - estado global]
+        Router[router.js - enrutamiento]
+    end
+    subgraph Backend["Backend Flask"]
+        Controllers[Controladores - rutas HTTP]
+        Services[Servicios - lógica de negocio]
+        Repositories[Repositorios - acceso a BD]
+        Entities[Entidades - modelos SQLAlchemy]
+        DTOs[DTOs - Marshmallow schemas]
+    end
+    subgraph DB["Base de datos MySQL"]
+        Tables[Tablas: usuarios, cultivos, lotes, labores]
+    end
+    Frontend -->|Fetch API| Controllers
+    Controllers --> Services
+    Services --> Repositories
+    Repositories --> Entities
+    Entities --> Tables
+    </div>
+    <p class="footer" style="margin-top:8px; font-size:0.8rem;">C4 Contenedores: separación estricta de responsabilidades por capas.</p>
+  </div>
+
+  <div class="card">
+    <h3>Diagrama C4 - Componentes (módulo usuarios como ejemplo)</h3>
+    <div class="mermaid">
+graph LR
+    subgraph API["Capa API"]
+        LC[LoginController]
+    end
+    subgraph Service["Capa Servicio"]
+        AS[AuthService]
+    end
+    subgraph Repository["Capa Repositorio"]
+        UR[UserRepository]
+    end
+    subgraph Entity["Capa Entidad"]
+        UM[Usuario model]
+    end
+    subgraph DTO["Capa DTO"]
+        LS[LoginSchema]
+    end
+    LC --> AS
+    AS --> UR
+    UR --> UM
+    LC --> LS
+    </div>
+    <p class="footer" style="margin-top:8px; font-size:0.8rem;">Flujo de autenticación: controlador valida con DTO, servicio autentica, repositorio consulta la entidad.</p>
+  </div>
+
+  <h2 class="section-title">Arquitectura lógica, organización de dominios, módulos y capas</h2>
+  <div class="card">
+    <h3>Organización por dominios</h3>
+    <p>Cada dominio de negocio está aislado en su propio módulo dentro de <code>backend/app/modules/</code>, respetando la separación de responsabilidades:</p>
+    <table>
+      <tr><th>Módulo</th><th>Dominio</th><th>Capas implementadas</th><th>Estado</th></tr>
+      <tr><td><code>usuarios</code></td><td>Autenticación y gestión de usuarios</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>lotes</code></td><td>Consulta pública de lotes por QR</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>cultivos</code></td><td>Catálogo de cultivos</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>labores</code></td><td>Registro de labores agrícolas</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+    </table>
+    <h3>Responsabilidades por capa</h3>
+    <table>
+      <tr><th>Capa</th><th>Responsabilidad</th><th>Ejemplo</th></tr>
+      <tr><td>Controllers</td><td>Rutas HTTP, peticiones y respuestas (Blueprints de Flask)</td><td><code>login()</code>, <code>get_lote_by_qr()</code></td></tr>
+      <tr><td>Services</td><td>Lógica de negocio, validaciones y orquestación</td><td><code>AuthService.authenticate()</code>, <code>CultivoService.create()</code></td></tr>
+      <tr><td>Repositories</td><td>Abstracción de la base de datos (consultas SQLAlchemy)</td><td><code>UserRepository.get_by_username()</code></td></tr>
+      <tr><td>Entities</td><td>Modelos ORM que representan las tablas de MySQL</td><td><code>Usuario</code>, <code>Lote</code>, <code>Cultivo</code>, <code>Labor</code></td></tr>
+      <tr><td>DTOs</td><td>Objetos de Transferencia de Datos para validación de entrada/salida</td><td><code>LoginSchema</code>, <code>LotePublicSchema</code>, <code>LaborCreateSchema</code></td></tr>
+    </table>
+  </div>
+
+  <h2 class="section-title">Modelo lógico y físico de la base de datos</h2>
+  <div class="card">
+    <h3>Diagrama Entidad-Relación (UML)</h3>
+    <div class="mermaid">
+erDiagram
+    USUARIOS ||--o{ LOTES : "posee"
+    USUARIOS ||--o{ LABORES : "registra"
+    CULTIVOS ||--o{ LOTES : "tiene"
+    LOTES ||--o{ LABORES : "contiene"
+
+    USUARIOS {
+        int id PK
+        string username UK
+        string password_hash
+        string nombre_completo
+        enum rol
+        int finca_id FK
+        enum estado
+        datetime creado_en
+        datetime actualizado_en
+    }
+    CULTIVOS {
+        int id PK
+        string nombre UK
+        string descripcion
+        int ciclo_estimado_dias
+        datetime creado_en
+        datetime actualizado_en
+    }
+    LOTES {
+        int id PK
+        int finca_id FK
+        int cultivo_id FK
+        string codigo_qr UK
+        string nombre
+        decimal hectareas
+        enum estado
+        date fecha_siembra
+        string estado_fenologico
+        int arboles
+        datetime creado_en
+        datetime actualizado_en
+    }
+    LABORES {
+        int id PK
+        int finca_id FK
+        int lote_id FK
+        enum tipo
+        date fecha
+        enum estado
+        string insumo
+        string dosis
+        text observaciones
+        datetime creado_en
+        datetime actualizado_en
+    }
+    </div>
+    <p class="footer" style="margin-top:8px; font-size:0.8rem;">Modelo lógico/físico: usuarios poseen lotes, cultivos clasifican lotes, y lotes contienen labores.</p>
+  </div>
+  <div class="card">
+    <h3>Script de inicialización (database/init.sql)</h3>
+    <p>Se incluyó un script SQL completo que crea la base de datos <code>agrogestion</code>, las cuatro tablas con sus relaciones y restricciones de integridad, y datos iniciales (seed data) de cultivos, usuarios y lotes para pruebas.</p>
+    <pre><code>-- Resumen del esquema
+CREATE TABLE cultivos (...);
+CREATE TABLE usuarios (...);
+CREATE TABLE lotes (...);
+CREATE TABLE labores (...);
+-- Datos iniciales: 2 cultivos, 5 usuarios, 7 lotes</code></pre>
+  </div>
+
+  <h2 class="section-title">Diseño de la API REST y comunicación entre componentes</h2>
+  <div class="card">
+    <h3>Endpoints implementados</h3>
+    <table>
+      <tr><th>Método</th><th>Endpoint</th><th>Descripción</th><th>Autenticación</th></tr>
+      <tr><td>POST</td><td>/api/auth/login</td><td>Autenticación de usuario</td><td>No</td></tr>
+      <tr><td>POST</td><td>/api/auth/logout</td><td>Cerrar sesión</td><td>Sí</td></tr>
+      <tr><td>GET</td><td>/api/auth/me</td><td>Usuario autenticado actual</td><td>Sí</td></tr>
+      <tr><td>GET</td><td>/api/lotes/qr/&lt;codigo_qr&gt;</td><td>Consulta pública de lote por QR</td><td>No</td></tr>
+      <tr><td>GET/POST/PUT/DELETE</td><td>/api/cultivos</td><td>CRUD de cultivos</td><td>Sí (Admin)</td></tr>
+      <tr><td>GET/POST/PUT/DELETE</td><td>/api/labores</td><td>CRUD de labores</td><td>Sí</td></tr>
+    </table>
+    <h3>Comunicación entre componentes</h3>
+    <ul>
+      <li><strong>Frontend → Backend:</strong> peticiones <code>fetch</code> asíncronas con JSON a través de <code>apiClient.js</code>.</li>
+      <li><strong>Backend → Base de datos:</strong> consultas SQLAlchemy a través de repositorios.</li>
+      <li><strong>Frontend interno:</strong> store global pub/sub que mantiene sincronizados dashboard, lotes, labores, cultivos, insumos, fincas y usuarios. Cualquier creación/edición/eliminación se refleja inmediatamente en todas las vistas.</li>
+      <li><strong>Errores:</strong> manejo centralizado con <code>AppException</code> que respuestas JSON con código HTTP y mensaje amigable.</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Diseño de seguridad</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Autenticación:</strong> Flask-Login gestiona sesiones de usuario. Las contraseñas se almacenan hasheadas con Flask-Bcrypt (never plain text).</li>
+      <li><strong>Autorización por roles:</strong> decorador <code>admin_required</code> protege rutas para SUPERADMIN y ADMIN. Los MAYORDOMO solo ven su finca asignada.</li>
+      <li><strong>Endpoints públicos:</strong> la consulta de lotes por QR no requiere autenticación y solo expone datos no sensibles (nombre, estado, cultivo, hectáreas).</li>
+      <li><strong>Validación de entrada:</strong> todos los payloads se validan con Marshmallow antes de llegar al servicio.</li>
+      <li><strong>Manejo de excepciones:</strong> <code>AppException</code> devuelve códigos HTTP apropiados (400, 401, 403, 404, 409, 500) sin exponer detalles internos del servidor.</li>
+      <li><strong>Variables de entorno:</strong> SECRET_KEY y credenciales de BD en archivo <code>.env</code> (ignorado por Git, no se suben secretos).</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">Decisiones arquitectónicas (ADR)</h2>
+  <div class="card">
+    <h3>ADR-01: Monolito modular por capas</h3>
+    <p><strong>Decisión:</strong> Organizar el backend como monolito modular con separación estricta de controladores, servicios, repositorios, entidades y DTOs por dominio.</p>
+    <p><strong>Alternativas consideradas:</strong> microservicios, arquitectura en capas tradicional sin separación por dominio.</p>
+    <p><strong>Justificación:</strong> Proyecto de alcance académico con un equipo reducido; el monolito modular facilita desarrollo, pruebas y despliegue en un solo servidor, mientras que la separación por capas garantiza mantenibilidad y testabilidad.</p>
+    <h3>ADR-02: SPA vanilla JavaScript sin frameworks de interfaz</h3>
+    <p><strong>Decisión:</strong> Construir el frontend con HTML/CSS/JS puro y Bootstrap 5, sin React, Angular ni Vue.</p>
+    <p><strong>Alternativas consideradas:</strong> React, Vue.js, Angular.</p>
+    <tr><td>Justificación:</strong> Requisito explícito de la asignatura. Además, reduce dependencias, tiempo de compilación y complejidad para un proyecto de este tamaño.</p>
+    <h3>ADR-03: Estado global con store pub/sub</h3>
+    <p><strong>Decisión:</strong> Implementar un store centralizado (patrón observador) en JavaScript para sincronizar datos entre todas las vistas del SPA.</p>
+    <p><strong>Alternativas consideradas:</strong> estado local por vista, localStorage, Context API (React).</p>
+    <p><strong>Justificación:</strong> Garantiza que la información se mantenga sincronizada en todos los apartados (dashboard, lotes, labores, cultivos, insumos, fincas, usuarios) sin recargas de página.</p>
+    <h3>ADR-04: Flask-Migrate para gestión de esquema</h3>
+    <p><strong>Decisión:</strong> Agregar Flask-Migrate/Alembic para control de versiones de la base de datos.</p>
+    <p><strong>Alternativas consideradas:</strong> scripts SQL manuales únicamente.</p>
+    <p><strong>Justificación:</strong> Requisito técnico del proyecto (gestión de migraciones de base de datos) y buena práctica para evolucionar el esquema de forma controlada.</p>
+  </div>
+
+  <h2 class="section-title">Consideraciones de calidad</h2>
+  <div class="card two-col">
+    <div>
+      <h3>Rendimiento</h3>
+      <ul>
+        <li>Endpoints públicos (QR) optimizados para consultas simples sin autenticación.</li>
+        <li>Uso de índices en claves foráneas y campos de búsqueda (código QR, finca, lote, fecha).</li>
+        <li>Frontend sin build step: carga inmediata de assets estáticos.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Escalabilidad</h3>
+      <ul>
+        <li>Arquitectura modular permite agregar nuevos dominios sin afectar los existentes.</li>
+        <li>Separación de capas facilita reemplazar la base de datos o agregar servicios externos.</li>
+        <li>Posibilidad de escalar horizontalmente colocando Flask detrás de un WSGI y proxy inverso (Nginx/Apache).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Disponibilidad</h3>
+      <ul>
+        <li>Servidor Flask ligero apto para desarrollo y despliegue en pequeños servidores.</li>
+        <li>Manejo centralizado de errores evita fallos silenciosos.</li>
+        <li>Base de datos MySQL con motor InnoDB soporta transacciones y concurrencia.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Seguridad</h3>
+      <ul>
+        <li>Contraseñas hasheadas con Bcrypt.</li>
+        <li>Control de acceso por roles y finca asignada.</li>
+        <li>Validación de entrada en cliente y servidor.</li>
+        <li>No se exponen secretos ni credenciales en el código.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Costos y riesgos</h3>
+      <ul>
+        <li><strong>Costos bajos:</strong> tecnologías de código abierto (Flask, MySQL, Bootstrap, JavaScript vanilla).</li>
+        <li><strong>Riesgo mitigado:</strong> dependencia de CDN para Bootstrap (mitigada con fallback local si fuera necesario en producción).</li>
+        <li><strong>Riesgo mitigado:</strong> ausencia de autenticación en endpoint QR (aceptable por diseño, solo datos no sensibles).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="section-title">Pruebas de funcionamiento</h2>
+  <div class="card">
+    <p>Se incluyó una estructura básica de pruebas con <code>pytest</code> en <code>backend/tests/</code> que verifica la creación de la aplicación Flask y la conectividad con la base de datos en memoria (SQLite para tests).</p>
+    <pre><code># Ejecutar pruebas
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest</code></pre>
+  </div>
+
+  <div class="footer">
+    <p><strong>AgroGestion</strong> · Informe del Proyecto Final · Generado para la evaluación práctica de la asignatura</p>
+    <p>Stack: Flask + SQLAlchemy + Marshmallow + MySQL · Frontend: HTML5, CSS3, JavaScript vanilla + Bootstrap 5</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+AGROGESTION - INSTRUCCIONES DE ARRANQUE
+
+1. Abre el panel de XAMPP e inicia MySQL.
+
+2. Abre PowerShell y ejecuta:
+
+   cd C:\Users\pipeg\Desktop\VAGRO\agrogestion\backend
+   .\.venv\Scripts\Activate.ps1
+   python run.py
+
+3. Deja abierta esa terminal mientras uses la aplicacion.
+
+4. Abre en el navegador:
+
+   http://127.0.0.1:5000
+
+Datos de acceso:
+   Usuario: admin
+   Contrasena: Admin123!
+
+Para detener el servidor:
+   Pulsa Ctrl+C en la terminal donde esta ejecutandose Flask.
+
+Para salir del entorno virtual:
+   Escribe deactivate en PowerShell.
+
+Nota: estas credenciales son para desarrollo local. Cambia la contrasena
+antes de utilizar la aplicacion con datos reales o en un entorno publico.

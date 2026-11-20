@@ -1,0 +1,32 @@
+:root {
+  color-scheme: light;
+  --agro-ink: #26332b;
+  --agro-green: #315d43;
+  --agro-canvas: #f4f6f1;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--agro-ink);
+  background: var(--agro-canvas);
+}
+
+.workflow {
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #dce3db;
+  border-radius: 0.375rem;
+}
+
+.workflow-narrow {
+  max-width: 28rem;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--agro-green);
+  --bs-btn-border-color: var(--agro-green);
+  --bs-btn-hover-bg: #274b36;
+  --bs-btn-hover-border-color: #274b36;
+}
