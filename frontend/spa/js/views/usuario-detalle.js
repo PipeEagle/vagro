@@ -1,7 +1,8 @@
 /* Vista: UsuarioDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const UsuarioDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -58,7 +59,11 @@ export const UsuarioDetalleView = (container, { id }) => {
 
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo("/usuarios");
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/usuarios");
+      }
     });
 
     if (puedeEditar) {
@@ -66,9 +71,11 @@ export const UsuarioDetalleView = (container, { id }) => {
         abrirModalEditar();
       });
 
-      document.getElementById("btnEliminar").addEventListener("click", () => {
-        abrirModalEliminar();
-      });
+      if (usuario.id !== 1) {
+        document.getElementById("btnEliminar").addEventListener("click", () => {
+          abrirModalEliminar();
+        });
+      }
     }
   };
 
@@ -89,7 +96,7 @@ export const UsuarioDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Rol</label>
-            <select class="form-select" name="rol">
+            <select class="form-select" name="rol" required>
               <option value="ADMIN" ${usuario.rol === "ADMIN" ? "selected" : ""}>Administrador</option>
               <option value="SUPERADMIN" ${usuario.rol === "SUPERADMIN" ? "selected" : ""}>Super administrador</option>
               <option value="MAYORDOMO" ${usuario.rol === "MAYORDOMO" ? "selected" : ""}>Mayordomo</option>
@@ -97,7 +104,7 @@ export const UsuarioDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
+            <select class="form-select" name="estado" required>
               <option value="Activo" ${usuario.estado === "Activo" ? "selected" : ""}>Activo</option>
               <option value="Inactivo" ${usuario.estado === "Inactivo" ? "selected" : ""}>Inactivo</option>
             </select>
@@ -107,6 +114,7 @@ export const UsuarioDetalleView = (container, { id }) => {
       onConfirm: () => {
         const form = document.getElementById("formEditarUsuario");
         const fd = new FormData(form);
+        if (!validateRequired(fd, ["nombre_completo", "username", "rol"])) return false;
         const currentUsuarios = store.getState().usuariosRegistrados || [];
         const uIndex = currentUsuarios.findIndex((u) => u.id === usuario.id);
         if (uIndex !== -1) {
@@ -120,20 +128,29 @@ export const UsuarioDetalleView = (container, { id }) => {
         showToast("Usuario actualizado", "success");
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (usuario.id === 1) {
-          showToast("No se puede eliminar el administrador principal", "error");
-          return;
-        }
-        if (!confirm("¿Estas seguro de eliminar este usuario?")) return;
-        const currentUsuarios = store.getState().usuariosRegistrados || [];
-        currentUsuarios = currentUsuarios.filter((u) => u.id !== usuario.id);
-        store.setState({ usuariosRegistrados: currentUsuarios });
-        showToast("Usuario eliminado", "info");
-        goTo("/usuarios");
-      },
-      deleteLabel: "Eliminar",
     });
+  };
+
+  const eliminarUsuario = async () => {
+    if (usuario.id === 1) {
+      showToast("No se puede eliminar el administrador principal", "error");
+      return false;
+    }
+
+    try {
+      await apiClient.delete(`/api/usuarios/${usuario.id}`);
+    } catch (error) {
+      showToast(error.message || "Error al eliminar el usuario", "danger");
+      return false;
+    }
+
+    const { usuariosRegistrados = [] } = store.getState();
+    store.setState({
+      usuariosRegistrados: usuariosRegistrados.filter((item) => item.id !== usuario.id),
+    });
+    showToast("Usuario eliminado", "success");
+    goTo("/usuarios");
+    return true;
   };
 
   const abrirModalEliminar = () => {
@@ -144,17 +161,7 @@ export const UsuarioDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar el usuario <strong>${usuario.username}</strong>?</p>
         ${usuario.id === 1 ? '<p class="text-danger">No se puede eliminar el administrador principal.</p>' : ""}
       `,
-      onDelete: () => {
-        if (usuario.id === 1) {
-          showToast("No se puede eliminar el administrador principal", "error");
-          return;
-        }
-        const currentUsuarios = store.getState().usuariosRegistrados || [];
-        currentUsuarios = currentUsuarios.filter((u) => u.id !== usuario.id);
-        store.setState({ usuariosRegistrados: currentUsuarios });
-        showToast("Usuario eliminado", "info");
-        goTo("/usuarios");
-      },
+      onDelete: eliminarUsuario,
       deleteLabel: "Eliminar",
       showDelete: true,
     });

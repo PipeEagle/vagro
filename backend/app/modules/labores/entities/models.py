@@ -13,7 +13,7 @@ class Labor(db.Model):
     __tablename__ = "labores"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    finca_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False)
+    finca_id: Mapped[int] = mapped_column(ForeignKey("fincas.id", ondelete="RESTRICT"), nullable=False)
     lote_id: Mapped[int] = mapped_column(ForeignKey("lotes.id", ondelete="RESTRICT"), nullable=False)
     tipo: Mapped[str] = mapped_column(
         db.Enum("siembra", "fertilizacion", "fumigacion", "poda", "riego", "cosecha", name="labor_tipo"),
@@ -21,9 +21,9 @@ class Labor(db.Model):
     )
     fecha: Mapped[date] = mapped_column(db.Date, nullable=False)
     estado: Mapped[str] = mapped_column(
-        db.Enum("Programada", "Completada", "Pendiente", "Vencida", name="labor_estado"),
+        db.Enum("Pendiente", "Por confirmar", "Completada", "Vencida", name="labor_estado"),
         nullable=False,
-        default="Programada",
+        default="Pendiente",
     )
     insumo: Mapped[str | None] = mapped_column(db.String(100))
     dosis: Mapped[str | None] = mapped_column(db.String(50))
@@ -39,7 +39,7 @@ class Labor(db.Model):
     )
 
     lote = relationship("Lote", backref="labores")
-    finca = relationship("Usuario", backref="labores")
+    finca = relationship("Finca", backref="labores")
 
     def __repr__(self) -> str:
         return f"<Labor {self.tipo} {self.fecha}>"

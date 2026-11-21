@@ -6,34 +6,40 @@ import { FincaSelector } from "../components/finca-selector.js";
 import { showToast, goTo } from "../app.js";
 
 export const DashboardView = (container) => {
-  const { user, fincas, fincaSeleccionada, lotes, labores, cosechas, eventos } = store.getState();
+  const { user, fincas, fincaSeleccionada, lotes, labores, cosechas } = store.getState();
   const esMayordomo = user?.rol === "MAYORDOMO";
 
-  let fincaActiva = fincaSeleccionada ? fincas.find(f => f.id === fincaSeleccionada) : null;
-  if (esMayordomo && user.finca_id) {
-    fincaActiva = fincas.find(f => f.id === user.finca_id);
+  const fincasList = fincas || [];
+  const lotesList = lotes || [];
+  const laboresList = labores || [];
+  const cosechasList = cosechas || [];
+
+  let fincaActiva = fincaSeleccionada ? fincasList.find((f) => f.id === fincaSeleccionada) : null;
+  if (esMayordomo && user?.finca_id) {
+    fincaActiva = fincasList.find((f) => f.id === user.finca_id);
     store.setState({ fincaSeleccionada: user.finca_id });
   }
 
   const datosFiltradosPorFinca = (arr) => {
-    if (esMayordomo && user.finca_id) return arr.filter((d) => d.finca_id === user.finca_id);
+    if (esMayordomo && user?.finca_id) return arr.filter((d) => d.finca_id === user.finca_id);
     if (fincaSeleccionada) return arr.filter((d) => d.finca_id === fincaSeleccionada);
     return arr;
   };
 
-  const lotesFinca = datosFiltradosPorFinca(lotes);
-  const laboresFinca = datosFiltradosPorFinca(labores);
-  const cosechasFinca = datosFiltradosPorFinca(cosechas);
-  const eventosFinca = datosFiltradosPorFinca(eventos);
+  const lotesFinca = datosFiltradosPorFinca(lotesList);
+  const laboresFinca = datosFiltradosPorFinca(laboresList);
+  const cosechasFinca = datosFiltradosPorFinca(cosechasList);
+  const puedeVerTodasLasFincas = !esMayordomo && fincasList.length > 0;
+  const hayFincaParaMostrar = Boolean(fincaActiva) || puedeVerTodasLasFincas;
 
   const totalHectareas = lotesFinca.reduce((sum, l) => sum + (l.hectareas || 0), 0);
-  const laboresPendientes = laboresFinca.filter((l) => l.estado === "Pendiente" || l.estado === "Programada").length;
+  const laboresPendientes = laboresFinca.filter((l) => l.estado === "Pendiente" || l.estado === "Por confirmar").length;
   const laboresCompletadas = laboresFinca.filter((l) => l.estado === "Completada").length;
   const lotesProduccion = lotesFinca.filter((l) => l.estado_fenologico === "Produccion").length;
   const produccionMes = cosechasFinca
     .filter((c) => c.estado === "Completada")
     .reduce((sum, c) => sum + (c.cantidad || 0), 0);
-  const eventosProximos = eventosFinca.filter((e) => e.estado === "Programada").length;
+  const eventosProximos = laboresFinca.filter((l) => l.estado === "Pendiente" || l.estado === "Por confirmar").length;
 
   const renderLoading = () => {
     container.innerHTML = `
@@ -59,8 +65,8 @@ export const DashboardView = (container) => {
   };
 
   const renderContent = () => {
-    const fincaNombre = fincaActiva ? fincaActiva.nombre : "";
-    const resumenHTML = fincaActiva ? `
+    const fincaNombre = fincaActiva ? fincaActiva.nombre : "todas las fincas";
+    const resumenHTML = hayFincaParaMostrar ? `
       <div class="row g-4 mb-4">
         <div class="col-md-3">
           ${KpiCard({ label: "Hectareas activas", value: totalHectareas.toFixed(1) + " ha", icon: "hs", color: "success" })}
@@ -117,9 +123,9 @@ export const DashboardView = (container) => {
                     <div class="list-group-item d-flex justify-content-between align-items-center p-2" data-labor-id="${l.id}" style="cursor:pointer;">
                       <div>
                         <div class="fw-semibold">${l.tipo}</div>
-                        <div class="text-muted small">${l.lote_codigo_qr} - ${l.fecha}</div>
+                        <div class="text-muted small">${lotesList.find((lote) => lote.id === l.lote_id)?.codigo_qr || "Lote no disponible"} - ${l.fecha}</div>
                       </div>
-                      <span class="badge bg-${l.estado === "Completada" ? "success" : l.estado === "Programada" ? "info" : "warning"}">${l.estado}</span>
+                      <span class="badge bg-${l.estado === "Completada" ? "success" : l.estado === "Pendiente" ? "info" : "warning"}">${l.estado}</span>
                     </div>
                   `).join("")}
                 </div>
@@ -170,8 +176,8 @@ export const DashboardView = (container) => {
       <div class="text-center py-5">
         <div class="empty-state">
           <div class="empty-state-icon">🏔️</div>
-          <h3 class="error-title">Selecciona una finca</h3>
-          <p class="text-muted">Para comenzar a trabajar, selecciona una finca del selector superior.</p>
+          <h3 class="error-title">${fincasList.length ? "Selecciona una finca" : "No hay fincas disponibles"}</h3>
+          <p class="text-muted">${fincasList.length ? "Para comenzar a trabajar, selecciona una finca del selector superior." : "No se encontraron fincas cargadas en el sistema."}</p>
         </div>
       </div>
     `;

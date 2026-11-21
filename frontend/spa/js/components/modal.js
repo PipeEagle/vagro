@@ -34,7 +34,10 @@ export const Modal = ({
     backdrop.classList.add("visible");
   });
 
+  let closing = false;
   const close = () => {
+    if (closing) return;
+    closing = true;
     backdrop.classList.remove("visible");
     setTimeout(() => backdrop.remove(), 200);
     if (onClose) onClose();
@@ -51,16 +54,54 @@ export const Modal = ({
   }
 
   if (onConfirm) {
-    backdrop.querySelector("#" + id + "-confirm").addEventListener("click", () => {
-      onConfirm();
-      close();
+    const confirmButton = backdrop.querySelector("#" + id + "-confirm");
+    let confirming = false;
+    confirmButton.addEventListener("click", async () => {
+      if (confirming) return;
+      const form = backdrop.querySelector(".modal-body form");
+      if (form && !form.reportValidity()) return;
+      if (form) {
+        const blankRequiredField = Array.from(form.querySelectorAll("[required]")).find(
+          (field) => !field.value.trim()
+        );
+        if (blankRequiredField) {
+          blankRequiredField.setCustomValidity("Completa este campo.");
+          blankRequiredField.reportValidity();
+          blankRequiredField.setCustomValidity("");
+          return;
+        }
+      }
+
+      confirming = true;
+      confirmButton.disabled = true;
+      try {
+        const result = await onConfirm();
+        if (result !== false) close();
+      } finally {
+        if (!closing && backdrop.isConnected) {
+          confirming = false;
+          confirmButton.disabled = false;
+        }
+      }
     });
   }
 
   if (showDelete && onDelete) {
-    backdrop.querySelector("#" + id + "-delete").addEventListener("click", () => {
-      onDelete();
-      close();
+    const deleteButton = backdrop.querySelector("#" + id + "-delete");
+    let deleting = false;
+    deleteButton.addEventListener("click", async () => {
+      if (deleting) return;
+      deleting = true;
+      deleteButton.disabled = true;
+      try {
+        const result = await onDelete();
+        if (result !== false) close();
+      } finally {
+        if (!closing && backdrop.isConnected) {
+          deleting = false;
+          deleteButton.disabled = false;
+        }
+      }
     });
   }
 

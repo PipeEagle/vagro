@@ -1,8 +1,9 @@
 /* Vista: LoteDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { StatusBadge } from "../components/status-badge.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const LoteDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -39,7 +40,7 @@ export const LoteDetalleView = (container, { id }) => {
         </div>
 
         <div class="row g-4">
-          <div class="col-12">
+          <div class="col-12 col-md-8">
             <div class="card shadow-sm">
               <div class="card-body">
                 <h5 class="card-title">Informacion del lote</h5>
@@ -52,13 +53,29 @@ export const LoteDetalleView = (container, { id }) => {
               </div>
             </div>
           </div>
+          <div class="col-12 col-md-4">
+            <div class="card shadow-sm text-center">
+              <div class="card-body">
+                <h5 class="card-title">Codigo QR</h5>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lote.codigo_qr)}&size=200x200" alt="QR ${lote.codigo_qr}" class="img-fluid mb-3" style="max-width: 200px;">
+                <div class="d-flex gap-2 justify-content-center">
+                  <a href="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lote.codigo_qr)}&size=200x200" download="${lote.codigo_qr}.png" class="btn btn-sm btn-outline-primary" target="_blank">Descargar PNG</a>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('${lote.codigo_qr}')" title="Copiar codigo">Copiar codigo</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     `;
 
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo("/lotes");
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/lotes");
+      }
     });
 
     if (puedeEditar) {
@@ -84,9 +101,9 @@ export const LoteDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Cultivo</label>
-            <select class="form-select" name="cultivo">
-              <option value="cafe" ${lote.cultivo.nombre === "Cafe" ? "selected" : ""}>Cafe</option>
-              <option value="platano" ${lote.cultivo.nombre === "Platano" ? "selected" : ""}>Platano</option>
+            <select class="form-select" name="cultivo_id" required>
+              <option value="1" ${Number(lote.cultivo_id) === 1 ? "selected" : ""}>Cafe</option>
+              <option value="2" ${Number(lote.cultivo_id) === 2 ? "selected" : ""}>Platano</option>
             </select>
           </div>
           <div class="mb-3">
@@ -95,37 +112,41 @@ export const LoteDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
+            <select class="form-select" name="estado" required>
               <option value="ACTIVO" ${lote.estado === "ACTIVO" ? "selected" : ""}>Activo</option>
               <option value="EN_DESCANSO" ${lote.estado === "EN_DESCANSO" ? "selected" : ""}>En descanso</option>
             </select>
           </div>
         </form>
       `,
-      onConfirm: () => {
+      onConfirm: async () => {
         const form = document.getElementById("formEditarLote");
         const fd = new FormData(form);
-        lote.nombre = fd.get("nombre");
-        lote.cultivo = { nombre: fd.get("cultivo") === "cafe" ? "Cafe" : "Platano" };
-        lote.hectareas = parseFloat(fd.get("hectareas"));
-        lote.estado = fd.get("estado");
-        const { lotes } = store.getState();
-        const idx = lotes.findIndex((l) => l.id === lote.id);
-        if (idx !== -1) lotes[idx] = lote;
-        store.setState({ lotes });
-        render();
-        showToast("Lote actualizado", "success");
+        if (!validateRequired(fd, ["nombre", "cultivo_id", "hectareas", "estado"])) return false;
+
+        try {
+          const actualizado = await apiClient.put(`/api/lotes/${lote.id}`, {
+            finca_id: lote.finca_id,
+            cultivo_id: Number(fd.get("cultivo_id")),
+            codigo_qr: lote.codigo_qr,
+            nombre: fd.get("nombre").trim(),
+            hectareas: Number(fd.get("hectareas")),
+            estado: fd.get("estado"),
+          });
+          const lotes = [...(store.getState().lotes || [])];
+          const idx = lotes.findIndex((item) => item.id === lote.id);
+          if (idx !== -1) lotes[idx] = actualizado;
+          store.setState({ lotes });
+          lote = actualizado;
+          render();
+          showToast("Lote actualizado", "success");
+        } catch (error) {
+          showToast(error.message || "Error al actualizar el lote", "danger");
+          return false;
+        }
+        return true;
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (!confirm("¿Estas seguro de eliminar este lote?")) return;
-        const { lotes } = store.getState();
-        lotes = lotes.filter((l) => l.id !== lote.id);
-        store.setState({ lotes });
-        showToast("Lote eliminado", "info");
-        goTo("/lotes");
-      },
-      deleteLabel: "Eliminar",
     });
   };
 
@@ -137,12 +158,19 @@ export const LoteDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar el lote <strong>${lote.nombre}</strong> (${lote.codigo_qr})?</p>
         <p class="text-danger">Esta accion no se puede deshacer.</p>
       `,
-      onDelete: () => {
+      onDelete: async () => {
+        try {
+          await apiClient.delete(`/api/lotes/${lote.id}`);
+        } catch (error) {
+          showToast(error.message || "Error al eliminar el lote", "danger");
+          return false;
+        }
         const { lotes } = store.getState();
-        lotes = lotes.filter((l) => l.id !== lote.id);
-        store.setState({ lotes });
-        showToast("Lote eliminado", "info");
+        const updatedLotes = lotes.filter((l) => l.id !== lote.id);
+        store.setState({ lotes: updatedLotes });
+        showToast("Lote eliminado", "success");
         goTo("/lotes");
+        return true;
       },
       deleteLabel: "Eliminar",
       showDelete: true,

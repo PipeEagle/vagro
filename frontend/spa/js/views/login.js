@@ -7,8 +7,8 @@ import { showToast, goTo } from "../app.js";
 const MOCK_USERS = [
   { username: "admin", password: "Admin123!", nombre_completo: "Administrador", rol: "SUPERADMIN", finca_id: null },
   { username: "ingeniero", password: "Ing123!", nombre_completo: "Ingeniero Agronomo", rol: "ADMIN", finca_id: null },
-  { username: "mayordomo1", password: "May123!", nombre_completo: "Mayordomo Finca Norte", rol: "MAYORDOMO", finca_id: 1 },
-  { username: "mayordomo2", password: "May123!", nombre_completo: "Mayordomo Finca Sur", rol: "MAYORDOMO", finca_id: 2 },
+  { username: "mayordomo1", password: "May123!", nombre_completo: "Mayordomo Finca Norte", rol: "MAYORDOMO", finca_nombre: "Finca Norte" },
+  { username: "mayordomo2", password: "May123!", nombre_completo: "Mayordomo Finca Sur", rol: "MAYORDOMO", finca_nombre: "Finca Sur" },
 ];
 
 export const LoginView = (container) => {
@@ -69,12 +69,6 @@ export const LoginView = (container) => {
                 </button>
               </form>
 
-              <div class="text-center mt-4 text-muted small">
-                Usuario: admin | Contrasena: Admin123!
-              </div>
-              <div class="text-center mt-2 text-muted small">
-                <small>Usuarios de prueba: mayordomo1 / mayordomo2 / ingeniero</small>
-              </div>
             </div>
           </div>
         </div>
@@ -89,10 +83,10 @@ export const LoginView = (container) => {
     e.preventDefault();
     if (!form) return;
     const formData = new FormData(form);
-    const username = formData.get("username");
+    const username = formData.get("username")?.trim();
     const password = formData.get("password");
 
-    if (!username || !password) {
+    if (!username || !password?.trim()) {
       showToast("Ingresa usuario y contrasena", "error");
       return;
     }
@@ -100,44 +94,70 @@ export const LoginView = (container) => {
     isSubmitting = true;
     render();
 
-    /* Intentar login simulado primero */
-    const usuariosRegistrados = store.getState().usuariosRegistrados || [];
-    const mockUser = [
-      ...MOCK_USERS,
-      ...usuariosRegistrados.filter((u) => !MOCK_USERS.some((m) => m.username === u.username)),
-    ].find((u) => u.username === username && u.password === password);
-    if (mockUser) {
-      store.setState({
-        user: { username: mockUser.username, nombre_completo: mockUser.nombre_completo, rol: mockUser.rol, finca_id: mockUser.finca_id },
-        isAuthenticated: true,
-        error: null,
-      });
-      if (mockUser.rol === "MAYORDOMO" && mockUser.finca_id) {
-        store.setState({ fincaSeleccionada: mockUser.finca_id });
-      } else if (mockUser.rol === "SUPERADMIN" || mockUser.rol === "ADMIN") {
-        store.setState({ fincaSeleccionada: 1 });
-      }
-      showToast("Sesion iniciada correctamente (modo simulacion)", "success");
-      goTo("/dashboard");
-      return;
-    }
-
-    /* Si no es usuario simulado, intentar backend real */
     try {
-      const res = await apiClient.post("/api/auth/login", {
-        username,
-        password,
-      });
+      const usuariosRegistradosState = store.getState().usuariosRegistrados;
+      const usuariosRegistrados = Array.isArray(usuariosRegistradosState)
+        ? usuariosRegistradosState
+        : [];
+      const fincas = store.getState().fincas || [];
+      const mockUsers = MOCK_USERS.map(({ finca_nombre, ...user }) => ({
+        ...user,
+        finca_id: finca_nombre
+          ? fincas.find((finca) => finca.nombre === finca_nombre)?.id ?? null
+          : user.finca_id,
+      }));
+      const mockUser = [
+        ...mockUsers,
+        ...usuariosRegistrados.filter((u) => u.password && !mockUsers.some((m) => m.username === u.username)),
+      ].find((u) => u.username === username && u.password === password);
+
+      let res;
+      try {
+        res = await apiClient.post("/api/auth/login", {
+          username,
+          password,
+        });
+      } catch (err) {
+        if (!mockUser) throw err;
+
+        store.setState({
+          user: {
+            username: mockUser.username,
+            nombre_completo: mockUser.nombre_completo,
+            rol: mockUser.rol,
+            finca_id: mockUser.finca_id,
+          },
+          isAuthenticated: true,
+          error: null,
+        });
+        if (mockUser.rol === "MAYORDOMO" && mockUser.finca_id) {
+          store.setState({ fincaSeleccionada: mockUser.finca_id });
+        } else if (mockUser.rol === "SUPERADMIN" || mockUser.rol === "ADMIN") {
+          store.setState({ fincaSeleccionada: store.getDefaultFincaId() });
+        }
+        showToast("Sesion iniciada correctamente (modo simulacion)", "success");
+        goTo("/dashboard");
+        return;
+      }
+
+      if (!res?.user) throw new Error("El servidor no devolvio los datos del usuario.");
+      const usuarios = ["SUPERADMIN", "ADMIN"].includes(res.user.rol)
+        ? await apiClient.get("/api/usuarios")
+        : [];
+      if (!Array.isArray(usuarios)) {
+        throw new Error("El servidor devolvio una lista de usuarios invalida.");
+      }
 
       store.setState({
-        user: res.user || { username },
+        user: res.user,
+        usuariosRegistrados: usuarios,
         isAuthenticated: true,
         error: null,
       });
       if (res.user.rol === "MAYORDOMO" && res.user.finca_id) {
         store.setState({ fincaSeleccionada: res.user.finca_id });
-      } else if (res.user.rol === "SUPERADMIN" || res.user.rol === "ADMIN") {
-        store.setState({ fincaSeleccionada: 1 });
+      } else if (["SUPERADMIN", "ADMIN"].includes(res.user.rol)) {
+        store.setState({ fincaSeleccionada: store.getDefaultFincaId() });
       }
 
       showToast("Sesion iniciada correctamente", "success");

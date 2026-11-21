@@ -73,7 +73,7 @@ Respuestas JSON uniformes. Códigos de error: 400, 401, 403, 404, 409, 413, 415,
 - `POST /api/auth/logout` verifica `current_user.is_authenticated`
 - La consulta pública de lotes no requiere autenticación ni sesión
 - `admin_required` protege rutas de administrador: verifica autenticación y rol en {ADMIN, SUPERADMIN}
-- Flask-Login `login_manager.login_view = "auth_pages.login_form"`
+- Flask-Login `login_manager.login_view = "auth_pages.spa_login_redirect"` redirects browser requests to the SPA sign-in screen
 - `user_loader` carga usuario activo por ID desde `UserRepository.get_by_id()`
 
 ## Formato de errores JSON

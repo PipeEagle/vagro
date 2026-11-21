@@ -40,7 +40,7 @@ class LaborRepository:
         lote_id: int,
         tipo: str,
         fecha: date,
-        estado: str = "Programada",
+        estado: str = "Pendiente",
         insumo: str | None = None,
         dosis: str | None = None,
         observaciones: str | None = None,

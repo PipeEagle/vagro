@@ -1,19 +1,19 @@
 /* Vista: Lotes (protegida) - Tabla limpia -> clic en fila abre detalle */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { StatusBadge } from "../components/status-badge.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const LotesView = (container) => {
   let selectedId = null;
-  let lotes = store.getState().lotes;
 
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
-    lotes = store.getState().lotes;
+    const lotes = store.getState().lotes || [];
 
     let lotesFiltrados = lotes;
-    if (user?.rol === "MAYORDOMO") {
+    if (user?.rol === "MAYORDOMO" && user.finca_id) {
       lotesFiltrados = lotes.filter((l) => l.finca_id === user.finca_id);
     } else if (fincaSeleccionada) {
       lotesFiltrados = lotes.filter((l) => l.finca_id === fincaSeleccionada);
@@ -39,25 +39,34 @@ export const LotesView = (container) => {
                   <th>Cultivo</th>
                   <th>Hectareas</th>
                   <th>Estado</th>
+                  <th>QR</th>
                 </tr>
               </thead>
               <tbody>
-                ${lotesFiltrados
-                  .map(
-                    (lote) => {
-                      const isSel = selectedId === lote.id;
-                      return `
-                  <tr class="${isSel ? "table-primary" : ""}" style="cursor:pointer;" data-lote-id="${lote.id}">
-                    <td>${lote.codigo_qr}</td>
-                    <td>${lote.nombre}</td>
-                    <td>${lote.cultivo?.nombre || "-"}</td>
-                    <td>${lote.hectareas.toFixed(2)} ha</td>
-                    <td>${StatusBadge({ estado: lote.estado, tipo: "estado" })}</td>
-                  </tr>
-                `;
-                    }
-                  )
-                  .join("")}
+                ${lotesFiltrados.length > 0
+                  ? lotesFiltrados
+                      .map(
+                        (lote) => {
+                          const isSel = selectedId === lote.id;
+                          return `
+                    <tr class="${isSel ? "table-primary" : ""}" style="cursor:pointer;" data-lote-id="${lote.id}">
+                      <td>${lote.codigo_qr}</td>
+                      <td>${lote.nombre}</td>
+                      <td>${lote.cultivo?.nombre || "-"}</td>
+                      <td>${parseFloat(lote.hectareas || 0).toFixed(2)} ha</td>
+                      <td>${StatusBadge({ estado: lote.estado, tipo: "estado" })}</td>
+                      <td>
+                        <div class="d-flex gap-1 justify-content-center">
+                          <img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lote.codigo_qr)}&size=40x40" alt="QR ${lote.codigo_qr}" style="width: 40px; height: 40px; object-fit: contain;">
+                          <a href="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lote.codigo_qr)}&size=200x200" download="${lote.codigo_qr}.png" class="btn btn-sm btn-outline-primary" title="Descargar QR" target="_blank"><i class="bi bi-download"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                        }
+                      )
+                      .join("")
+                  : '<tr><td colspan="6" class="text-center text-muted py-3">No hay lotes registrados.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -69,7 +78,6 @@ export const LotesView = (container) => {
       </div>
     `;
 
-    /* Event delegation: clic en fila abre detalle */
     const tbody = container.querySelector("tbody");
     if (tbody) {
       tbody.addEventListener("click", (e) => {
@@ -87,25 +95,22 @@ export const LotesView = (container) => {
     }
   };
 
-  const abrirModalNuevo = () => {
+  const abrirModalNuevo = async () => {
+    const { fincaSeleccionada, user } = store.getState();
     Modal({
       id: "modalNuevoLote",
       title: "Nuevo lote",
       bodyHtml: `
         <form id="formNuevoLote">
           <div class="mb-3">
-            <label class="form-label">Codigo QR</label>
-            <input type="text" class="form-control" name="codigo_qr" required placeholder="LOTE-CAF-002">
-          </div>
-          <div class="mb-3">
             <label class="form-label">Nombre</label>
             <input type="text" class="form-control" name="nombre" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Cultivo</label>
-            <select class="form-select" name="cultivo">
-              <option value="cafe">Cafe</option>
-              <option value="platano">Platano</option>
+            <select class="form-select" name="cultivo_id" required>
+              <option value="1">Cafe</option>
+              <option value="2">Platano</option>
             </select>
           </div>
           <div class="mb-3">
@@ -114,30 +119,45 @@ export const LotesView = (container) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
+            <select class="form-select" name="estado" required>
               <option value="ACTIVO">Activo</option>
               <option value="EN_DESCANSO">En descanso</option>
             </select>
           </div>
         </form>
       `,
-      onConfirm: () => {
+      onConfirm: async () => {
         const form = document.getElementById("formNuevoLote");
         const fd = new FormData(form);
-        const { fincaSeleccionada, user } = store.getState();
-        const nuevo = {
-          id: Date.now(),
-          finca_id: fincaSeleccionada || user?.finca_id || 1,
-          codigo_qr: fd.get("codigo_qr"),
-          nombre: fd.get("nombre"),
-          cultivo: { nombre: fd.get("cultivo") === "cafe" ? "Cafe" : "Platano" },
-          hectareas: parseFloat(fd.get("hectareas")),
-          estado: fd.get("estado"),
-        };
-        lotes.push(nuevo);
-        store.setState({ lotes });
-        render();
-        showToast("Lote creado correctamente", "success");
+        if (!validateRequired(fd, ["nombre", "cultivo_id", "hectareas"])) return false;
+
+        const fincaId =
+          fincaSeleccionada || user?.finca_id || store.getDefaultFincaId();
+        if (!fincaId) {
+          showToast("No hay fincas disponibles para asignar el lote.", "danger");
+          return false;
+        }
+
+        try {
+          const nuevo = await apiClient.post("/api/lotes", {
+            finca_id: fincaId,
+            cultivo_id: parseInt(fd.get("cultivo_id")),
+            codigo_qr: `LOTE-CAF-${Date.now().toString().slice(-3)}`,
+            nombre: fd.get("nombre"),
+            hectareas: parseFloat(fd.get("hectareas")),
+            estado: fd.get("estado"),
+          });
+
+          const { lotes } = store.getState();
+          store.setState({ lotes: [...lotes, nuevo] });
+
+          render();
+          showToast("Lote creado correctamente", "success");
+        } catch (e) {
+          showToast(e.message || "Error al crear el lote", "danger");
+          return false;
+        }
+        return true;
       },
       confirmLabel: "Crear",
     });

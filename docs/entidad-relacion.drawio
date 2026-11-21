@@ -1,40 +1,126 @@
-<mxfile host="draw.io" modified="2026-11-07T15:50:00Z" agent="AgroGestion" version="23.5.0" etag="erd" type="device">
-<diagram id="erd" name="Entidad-Relacion">
-<mxGraphModel dx="1422" dy="815" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
-<root>
-<mxCell id="0"/>
-<mxCell id="1"/>
-<mxCell id="t0" value="AgroGestion - Diagrama Entidad-Relacion (MySQL)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
-<mxGeometry x="50" y="20" width="900" height="40" as="geometry"/>
-</mxCell>
-<mxCell id="t1" value="usuarios&#xa;+ id: int (PK)&#xa;+ username: varchar(50) UK&#xa;+ password_hash: varchar(255)&#xa;+ nombre_completo: varchar(100)&#xa;+ rol: enum(ADMIN, SUPERADMIN)&#xa;+ is_active: boolean" style="shape=table;html=1;strokeColor=#1565c0;fillColor=#e3f2fd;strokeWidth=2;fontSize=12;align=left;verticalAlign=top;resizable=1;autosize=1" vertex="1" parent="1">
-<mxGeometry x="50" y="100" width="280" height="200" as="geometry"/>
-</mxCell>
-<mxCell id="t2" value="cultivos&#xa;+ id: int (PK)&#xa;+ nombre: varchar(50) UK&#xa;+ descripcion: text&#xa;+ ciclo_estimado_dias: int" style="shape=table;html=1;strokeColor=#2e7d32;fillColor=#e8f5e9;strokeWidth=2;fontSize=12;align=left;verticalAlign=top;resizable=1;autosize=1" vertex="1" parent="1">
-<mxGeometry x="420" y="100" width="280" height="160" as="geometry"/>
-</mxCell>
-<mxCell id="t3" value="lotes&#xa;+ id: int (PK)&#xa;+ codigo_qr: varchar(100) UK&#xa;+ nombre: varchar(100)&#xa;+ cultivo_id: int (FK)&#xa;+ hectareas: decimal(5,2)&#xa;+ estado: enum(ACTIVO, EN_DESCANSO, FINALIZADO)" style="shape=table;html=1;strokeColor=#ef6c00;fillColor=#fff3e0;strokeWidth=2;fontSize=12;align=left;verticalAlign=top;resizable=1;autosize=1" vertex="1" parent="1">
-<mxGeometry x="790" y="100" width="300" height="200" as="geometry"/>
-</mxCell>
-<mxCell id="t4" value="labores&#xa;+ id: int (PK)&#xa;+ lote_id: int (FK)&#xa;+ tipo: varchar(50)&#xa;+ estado: enum(pendiente, verificada, rechazada)" style="shape=table;html=1;strokeColor=#7b1fa2;fillColor=#f3e5f5;strokeWidth=2;fontSize=12;align=left;verticalAlign=top;resizable=1;autosize=1" vertex="1" parent="1">
-<mxGeometry x="1180" y="100" width="280" height="160" as="geometry"/>
-</mxCell>
-<mxCell id="r1" value="1:N" style="endArrow=classic;html=1;strokeColor=#2e7d32;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="t2" target="t3">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="40" y="0" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="r2" value="1:N" style="endArrow=classic;html=1;strokeColor=#ef6c00;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="t3" target="t4">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="40" y="0" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="r3" value="1:N (creado_por)" style="endArrow=classic;html=1;strokeColor=#1565c0;strokeWidth=2;exitX=1;exitY=0.7;entryX=0;entryY=0.7" edge="1" parent="1" source="t1" target="t4">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="40" y="0" as="offset"/>
-</mxGeometry>
-</mxCell>
-</root>
-</mxGraphModel>
-</diagram>
+<mxfile host="65bd71144e">
+    <diagram id="er" name="Modelo Entidad-Relación">
+        <mxGraphModel dx="1681" dy="1792" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" value="Modelo Entidad-Relación - AgroGestion" vertex="1">
+                    <mxGeometry height="40" width="900" x="150" y="-280" as="geometry"/>
+                </mxCell>
+                <mxCell id="u" parent="1" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=3;fontColor=#1b5e20;fontSize=14;fontStyle=1" value="USUARIOS" vertex="1">
+                    <mxGeometry height="400" width="320" x="50" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="u1" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="id : int PK" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="u2" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="username : varchar(50) UK" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="u3" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="password_hash : varchar(255)" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="u4" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="nombre_completo : varchar(100)" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="u5" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="rol : enum(SUPERADMIN, ADMIN, MAYORDOMO)" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="u6" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="finca_id : int FK (nullable)" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="u7" parent="u" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="estado : enum(Activo, Inactivo)" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="c" parent="1" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=3;fontColor=#1b5e20;fontSize=14;fontStyle=1" value="CULTIVOS" vertex="1">
+                    <mxGeometry height="300" width="320" x="420" y="-170" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1" parent="c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="id : int PK" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2" parent="c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="nombre : varchar(100) UK" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3" parent="c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="descripcion : text" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4" parent="c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;strokeWidth=2" value="ciclo_estimado_dias : int" vertex="1">
+                    <mxGeometry height="40" width="260" x="20" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="l" parent="1" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=3;fontColor=#0d47a1;fontSize=14;fontStyle=1" value="LOTES" vertex="1">
+                    <mxGeometry height="500" width="360" x="790" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="id : int PK" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="finca_id : int FK &gt; USUARIOS" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="cultivo_id : int FK &gt; CULTIVOS" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="l4" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="codigo_qr : varchar(100) UK" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="l5" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="nombre : varchar(100)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="l6" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="hectareas : decimal(5,2)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="l7" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="estado : enum(ACTIVO, EN_DESCANSO, FINALIZADO)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="l8" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="fecha_siembra : date" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="390" as="geometry"/>
+                </mxCell>
+                <mxCell id="l9" parent="l" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="estado_fenologico : varchar(50)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="la" parent="1" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;fillColor=#fff3e0;strokeColor=#ef6c00;strokeWidth=3;fontColor=#e65100;fontSize=14;fontStyle=1" value="LABORES" vertex="1">
+                    <mxGeometry height="500" width="360" x="360" y="610" as="geometry"/>
+                </mxCell>
+                <mxCell id="la1" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="id : int PK" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="la2" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="finca_id : int FK &gt; USUARIOS" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="la3" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="lote_id : int FK &gt; LOTES" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="la4" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="tipo : enum(siembra, fertilizacion, fumigacion, poda, riego, cosecha)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="la5" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="fecha : date" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="la6" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="estado : enum(Programada, Completada, Pendiente, Vencida)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="la7" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="insumo : varchar(100)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="la8" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="dosis : varchar(50)" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="390" as="geometry"/>
+                </mxCell>
+                <mxCell id="la9" parent="la" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="observaciones : text" vertex="1">
+                    <mxGeometry height="40" width="300" x="20" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" edge="1" parent="1" source="u" style="endArrow=ERoneToMany;html=1;strokeColor=#666;strokeWidth=2">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="790" y="300" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r2" edge="1" parent="1" source="u" style="endArrow=ERoneToMany;html=1;strokeColor=#666;strokeWidth=2" target="la">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" edge="1" parent="1" source="c" style="endArrow=ERoneToMany;html=1;strokeColor=#666;strokeWidth=2" target="l">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4" edge="1" parent="1" source="l" style="endArrow=ERoneToMany;html=1;strokeColor=#666;strokeWidth=2" target="la">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>

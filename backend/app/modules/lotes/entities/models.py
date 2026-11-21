@@ -16,7 +16,7 @@ class Lote(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     finca_id: Mapped[int] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("fincas.id", ondelete="RESTRICT"), nullable=False
     )
     cultivo_id: Mapped[int] = mapped_column(
         ForeignKey("cultivos.id", ondelete="RESTRICT"), nullable=False
@@ -43,7 +43,7 @@ class Lote(db.Model):
         onupdate=func.current_timestamp(),
     )
     cultivo = relationship("Cultivo", backref="lotes")
-    finca = relationship("Usuario", backref="lotes")
+    finca = relationship("Finca", backref="lotes")
 
     def __repr__(self) -> str:
         return f"<Lote {self.codigo_qr}>"

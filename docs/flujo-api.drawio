@@ -1,70 +1,96 @@
-<mxfile host="draw.io" modified="2026-11-07T15:50:00Z" agent="AgroGestion" version="23.5.0" etag="flujo-api" type="device">
-<diagram id="flujo-api" name="Flujo-API">
-<mxGraphModel dx="1422" dy="815" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
-<root>
-<mxCell id="0"/>
-<mxCell id="1"/>
-<mxCell id="f0" value="AgroGestion - Flujo de Endpoints API" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
-<mxGeometry x="50" y="20" width="700" height="40" as="geometry"/>
-</mxCell>
-<mxCell id="f1" value="Trabajador de Campo&#xa;(escanea QR fisico)" style="ellipse;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=2;fontSize=13;align=center;verticalAlign=middle" vertex="1" parent="1">
-<mxGeometry x="50" y="100" width="180" height="80" as="geometry"/>
-</mxCell>
-<mxCell id="f2" value="Administrador&#xa;(inicia sesion)" style="ellipse;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;strokeWidth=2;fontSize=13;align=center;verticalAlign=middle" vertex="1" parent="1">
-<mxGeometry x="50" y="240" width="180" height="80" as="geometry"/>
-</mxCell>
-<mxCell id="f3" value="GET /api/lotes/qr/:codigo_qr&#xa;(publico, sin login)" style="rounded=1;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="300" y="100" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f4" value="LoteService.get_lote_details_by_qr()&#xa;valida ACTIVO" style="rounded=1;html=1;fillColor=#ffffff;strokeColor=#666;strokeWidth=1;align=center;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
-<mxGeometry x="300" y="180" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f5" value="Respuesta JSON 200&#xa;{nombre, estado, cultivo, hectareas}" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#1b5e20;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="300" y="260" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f6" value="POST /api/auth/login&#xa;{username, password}" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="300" y="380" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f7" value="AuthService.authenticate()&#xa;verifica bcrypt y is_active" style="rounded=1;html=1;fillColor=#ffffff;strokeColor=#666;strokeWidth=1;align=center;verticalAlign=middle;fontSize=11" vertex="1" parent="1">
-<mxGeometry x="300" y="460" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f8" value="login_user() + JSON 200&#xa;{message, user}" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#1b5e20;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="300" y="540" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f9" value="POST /api/auth/logout&#xa;Sesion cerrada" style="rounded=1;html=1;fillColor=#ffebee;strokeColor=#b71c1c;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="300" y="620" width="320" height="60" as="geometry"/>
-</mxCell>
-<mxCell id="f10" value="MySQL: agrogestion" style="cylinder;html=1;fillColor=#fffde7;strokeColor=#f57f17;strokeWidth=2;align=center;verticalAlign=middle;fontSize=12" vertex="1" parent="1">
-<mxGeometry x="700" y="100" width="240" height="100" as="geometry"/>
-</mxCell>
-<mxCell id="ef1" value="" style="endArrow=classic;html=1;strokeColor=#2e7d32;strokeWidth=2" edge="1" parent="1" source="f1" target="f3">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef2" value="" style="endArrow=classic;html=1;strokeColor=#2e7d32;strokeWidth=2" edge="1" parent="1" source="f3" target="f4">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef3" value="" style="endArrow=classic;html=1;strokeColor=#2e7d32;strokeWidth=2" edge="1" parent="1" source="f4" target="f5">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef4" value="consulta" style="endArrow=classic;html=1;strokeColor=#f57f17;strokeWidth=1;dashed=1" edge="1" parent="1" source="f4" target="f10">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef5" value="" style="endArrow=classic;html=1;strokeColor=#ef6c00;strokeWidth=2" edge="1" parent="1" source="f2" target="f6">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef6" value="" style="endArrow=classic;html=1;strokeColor=#ef6c00;strokeWidth=2" edge="1" parent="1" source="f6" target="f7">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef7" value="" style="endArrow=classic;html=1;strokeColor=#ef6c00;strokeWidth=2" edge="1" parent="1" source="f7" target="f8">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef8" value="consulta" style="endArrow=classic;html=1;strokeColor=#f57f17;strokeWidth=1;dashed=1" edge="1" parent="1" source="f7" target="f10">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="ef9" value="" style="endArrow=classic;html=1;strokeColor=#b71c1c;strokeWidth=1" edge="1" parent="1" source="f8" target="f9">
-<mxGeometry relative="1" as="geometry"/>
-</mxCell>
-</root>
-</mxGraphModel>
-</diagram>
+<mxfile host="65bd71144e">
+    <diagram id="flujo" name="Flujo API REST">
+        <mxGraphModel dx="3187" dy="1158" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" value="Flujo de Petición API REST - AgroGestion" vertex="1">
+                    <mxGeometry height="40" width="900" x="50" y="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="fe" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=3;fontSize=14;fontStyle=1" value="Frontend SPA&#xa;Navegador del Usuario" vertex="1">
+                    <mxGeometry height="100" width="280" x="-10" y="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" parent="1" style="swimlane;html=1;startSize=40;horizontal=1;container=1;collapsible=0;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=3;fontColor=#0d47a1;fontSize=14;fontStyle=1" value="API REST (Flask)&#xa;Blueprint + CORS + JSON" vertex="1">
+                    <mxGeometry height="650" width="600" x="400" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="auth1" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="POST /api/auth/login&#xa;Body: {username, password}&#xa;→ 200 OK {user, message}&#xa;→ 401 {error}" vertex="1">
+                    <mxGeometry height="80" width="520" x="30" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="auth2" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="POST /api/auth/logout&#xa;→ 200 OK {message}" vertex="1">
+                    <mxGeometry height="60" width="520" x="30" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="auth3" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="GET /api/auth/me&#xa;→ 200 OK {user} / 401" vertex="1">
+                    <mxGeometry height="60" width="520" x="30" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="lot1" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="GET /api/lotes/qr/:codigo_qr&#xa;→ 200 OK {data: {nombre, estado, cultivo, hectareas}}&#xa;→ 404 {error} / 500" vertex="1">
+                    <mxGeometry height="80" width="520" x="30" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="cult" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="CRUD /api/cultivos&#xa;GET /api/cultivos (lista)&#xa;GET /api/cultivos/:id&#xa;POST /api/cultivos (crear)&#xa;PUT /api/cultivos/:id (actualizar)&#xa;DELETE /api/cultivos/:id" vertex="1">
+                    <mxGeometry height="120" width="520" x="30" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="lab" parent="api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;strokeWidth=2" value="CRUD /api/labores&#xa;GET /api/labores (lista)&#xa;GET /api/labores/:id&#xa;POST /api/labores (crear)&#xa;PUT /api/labores/:id (actualizar)&#xa;DELETE /api/labores/:id" vertex="1">
+                    <mxGeometry height="120" width="520" x="30" y="500" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc" parent="1" style="swimlane;html=1;startSize=50;horizontal=1;container=1;collapsible=0;fillColor=#fff3e0;strokeColor=#ef6c00;strokeWidth=3;fontColor=#e65100;fontSize=12" value="Capa Servicios&#xa;AuthService, LoteService,&#xa;CultivoService, LaborService" vertex="1">
+                    <mxGeometry height="270" width="280" x="190" y="850" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc1" parent="svc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="AuthService.authenticate()" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc2" parent="svc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="LoteService.get_lote_details_by_qr()" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc3" parent="svc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="CultivoService CRUD + validaciones" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc4" parent="svc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;strokeWidth=2" value="LaborService CRUD + validaciones" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="repo" parent="1" style="swimlane;html=1;startSize=50;horizontal=1;container=1;collapsible=0;fillColor=#fce4ec;strokeColor=#c2185b;strokeWidth=3;fontColor=#c2185b;fontSize=12" value="Capa Repositorios&#xa;UserRepository, LoteRepository,&#xa;CultivoRepository, LaborRepository" vertex="1">
+                    <mxGeometry height="280" width="280" x="-440" y="350" as="geometry"/>
+                </mxCell>
+                <mxCell id="repo1" parent="repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;strokeWidth=2" value="UserRepository.get_by_username()" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="repo2" parent="repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;strokeWidth=2" value="LoteRepository.get_by_qr_code()" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="repo3" parent="repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;strokeWidth=2" value="CultivoRepository CRUD" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="repo4" parent="repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c2185b;strokeWidth=2" value="LaborRepository CRUD + filtros" vertex="1">
+                    <mxGeometry height="40" width="220" x="20" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#f57f17;strokeWidth=3;fontSize=12" value="MySQL/MariaDB&#xa;Base: agrogestion&#xa;Tablas: usuarios, cultivos, lotes, labores" vertex="1">
+                    <mxGeometry height="120" width="280" x="-50" y="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="fe" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="auth1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="fe" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="lot1">
+                    <mxGeometry relative="1" x="-0.3172" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="350" y="280"/>
+                            <mxPoint x="350" y="410"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="api" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="svc">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="svc" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="repo">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="repo" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="db">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="api" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="cult">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="api" style="endArrow=classic;html=1;strokeColor=#666;strokeWidth=2;edgeStyle=orthogonalEdgeStyle" target="lab">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>

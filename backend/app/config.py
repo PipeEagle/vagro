@@ -21,3 +21,14 @@ class Config:
         database=os.environ.get("DB_NAME", "agrogestion"),
     ).render_as_string(hide_password=False)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Session cookie hardening
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False  # True solo en HTTPS producción
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_PATH = "/"
+    SESSION_COOKIE_DOMAIN = None  # None = host-only (127.0.0.1 / localhost)
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 hora
+
+    # Security headers
+    SESSION_REFRESH_EACH_REQUEST = True

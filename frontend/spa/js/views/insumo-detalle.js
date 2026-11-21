@@ -1,7 +1,8 @@
 /* Vista: InsumoDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const InsumoDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -44,8 +45,9 @@ export const InsumoDetalleView = (container, { id }) => {
                 <h5 class="card-title">Informacion del insumo</h5>
                 <p><strong>Nombre:</strong> ${insumo.nombre}</p>
                 <p><strong>Tipo:</strong> ${insumo.tipo}</p>
-                <p><strong>Ingrediente activo:</strong> ${insumo.ingrediente}</p>
-                <p><strong>Carencia:</strong> ${insumo.carencia}</p>
+                <p><strong>Ingrediente activo:</strong> ${insumo.ingrediente || "-"}</p>
+                <p><strong>Carencia:</strong> ${insumo.carencia || "-"}</p>
+                <p><strong>Cantidad:</strong> ${insumo.cantidad == null ? "Sin registrar" : `${Number(insumo.cantidad).toLocaleString("es-CO")} ${insumo.unidad}`}</p>
                 <p><strong>Unidad:</strong> ${insumo.unidad}</p>
                 <p><strong>Finca:</strong> ${insumo.finca_id}</p>
               </div>
@@ -57,7 +59,11 @@ export const InsumoDetalleView = (container, { id }) => {
 
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo("/insumos");
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/insumos");
+      }
     });
 
     if (puedeEditar) {
@@ -83,7 +89,7 @@ export const InsumoDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Tipo</label>
-            <select class="form-select" name="tipo">
+            <select class="form-select" name="tipo" required>
               <option value="fertilizante" ${insumo.tipo === "fertilizante" ? "selected" : ""}>Fertilizante</option>
               <option value="fungicida" ${insumo.tipo === "fungicida" ? "selected" : ""}>Fungicida</option>
               <option value="insecticida" ${insumo.tipo === "insecticida" ? "selected" : ""}>Insecticida</option>
@@ -92,47 +98,79 @@ export const InsumoDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Ingrediente activo</label>
-            <input type="text" class="form-control" name="ingrediente" value="${insumo.ingrediente}">
+            <input type="text" class="form-control" name="ingrediente" value="${insumo.ingrediente || ""}">
           </div>
           <div class="mb-3">
             <label class="form-label">Periodo de carencia (dias)</label>
-            <input type="number" class="form-control" name="carencia" value="${insumo.carencia === "-" ? "" : insumo.carencia}">
+            <input type="number" class="form-control" name="carencia" value="${!insumo.carencia || insumo.carencia === "-" ? "" : insumo.carencia}" min="0">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cantidad disponible</label>
+            <input type="number" class="form-control" name="cantidad" value="${insumo.cantidad ?? ""}" min="0" step="0.01" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Unidad</label>
-            <select class="form-select" name="unidad">
+            <select class="form-select" name="unidad" required>
               <option value="kg" ${insumo.unidad === "kg" ? "selected" : ""}>kg</option>
               <option value="L" ${insumo.unidad === "L" ? "selected" : ""}>L</option>
             </select>
           </div>
         </form>
       `,
-      onConfirm: () => {
+      onConfirm: async () => {
         const form = document.getElementById("formEditarInsumo");
         const fd = new FormData(form);
-        insumo.nombre = fd.get("nombre");
-        insumo.tipo = fd.get("tipo");
-        insumo.ingrediente = fd.get("ingrediente");
-        insumo.carencia = fd.get("carencia") || "-";
-        insumo.unidad = fd.get("unidad");
-        const { insumos } = store.getState();
-        const idx = insumos.findIndex((i) => i.id === insumo.id);
-        if (idx !== -1) insumos[idx] = insumo;
-        store.setState({ insumos });
-        render();
-        showToast("Insumo actualizado", "success");
+        if (!validateRequired(fd, ["nombre", "tipo", "cantidad"])) return false;
+        const cantidad = Number(fd.get("cantidad"));
+        if (!Number.isFinite(cantidad) || cantidad < 0) {
+          showToast("La cantidad debe ser un numero igual o mayor que cero.", "danger");
+          return false;
+        }
+        const carencia = fd.get("carencia");
+        if (carencia !== "" && carencia !== null && parseFloat(carencia) < 0) {
+          alert("El periodo de carencia no puede ser negativo.");
+          return false;
+        }
+        try {
+          const actualizado = await apiClient.put(`/api/insumos/${insumo.id}`, {
+            finca_id: insumo.finca_id,
+            nombre: fd.get("nombre").trim(),
+            tipo: fd.get("tipo"),
+            ingrediente: fd.get("ingrediente") || null,
+            carencia: carencia || null,
+            cantidad,
+            unidad: fd.get("unidad"),
+          });
+          const { insumos } = store.getState();
+          store.setState({
+            insumos: insumos.map((item) => item.id === actualizado.id ? actualizado : item),
+          });
+          insumo = actualizado;
+          render();
+          showToast("Insumo actualizado", "success");
+        } catch (error) {
+          showToast(error.message || "Error al actualizar el insumo", "danger");
+          return false;
+        }
+        return true;
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (!confirm("¿Estas seguro de eliminar este insumo?")) return;
-        const { insumos } = store.getState();
-        insumos = insumos.filter((i) => i.id !== insumo.id);
-        store.setState({ insumos });
-        showToast("Insumo eliminado", "info");
-        goTo("/insumos");
-      },
-      deleteLabel: "Eliminar",
     });
+  };
+
+  const eliminarInsumo = async () => {
+    try {
+      await apiClient.delete(`/api/insumos/${insumo.id}`);
+    } catch (error) {
+      showToast(error.message || "Error al eliminar el insumo", "danger");
+      return false;
+    }
+
+    const { insumos = [] } = store.getState();
+    store.setState({ insumos: insumos.filter((item) => item.id !== insumo.id) });
+    showToast("Insumo eliminado", "success");
+    goTo("/insumos");
+    return true;
   };
 
   const abrirModalEliminar = () => {
@@ -143,13 +181,7 @@ export const InsumoDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar el insumo <strong>${insumo.nombre}</strong>?</p>
         <p class="text-danger">Esta accion no se puede deshacer.</p>
       `,
-      onDelete: () => {
-        const { insumos } = store.getState();
-        insumos = insumos.filter((i) => i.id !== insumo.id);
-        store.setState({ insumos });
-        showToast("Insumo eliminado", "info");
-        goTo("/insumos");
-      },
+      onDelete: eliminarInsumo,
       deleteLabel: "Eliminar",
       showDelete: true,
     });

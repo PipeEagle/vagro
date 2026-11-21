@@ -1,8 +1,17 @@
-/* Cliente API - Envoltorio sobre fetch nativo con manejo de errores estandar */
+/* Cliente API - Envoltorio sobre fetch nativo con reintentos, logging y manejo de errores robusto */
 
 const API_BASE = "";
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 500;
 
-const api = (async (method, path, body = null, options = {}) => {
+const log = (level, msg, data) => {
+  const prefix = `[API ${level.toUpperCase()}]`;
+  console[level](prefix, msg, data ?? "");
+};
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const api = (async (method, path, body = null, options = {}, attempt = 1) => {
   const url = `${API_BASE}${path}`;
   const headers = {
     "Content-Type": "application/json",
@@ -20,11 +29,16 @@ const api = (async (method, path, body = null, options = {}) => {
   }
 
   try {
+    log("debug", `${method} ${url} (attempt ${attempt})`);
     const response = await fetch(url, config);
 
+    log("debug", `${method} ${url} -> ${response.status}`);
+
     if (response.status === 401) {
+      log("warn", "Sesión expirada (401)");
+      const store = (await import("../store.js")).default;
       store.setState({ isAuthenticated: false, user: null });
-      throw new Error("Sesion expirada o no autorizada");
+      throw { status: 401, message: "Sesion expirada o no autorizada", data: null };
     }
 
     const contentType = response.headers.get("content-type") || "";
@@ -36,17 +50,27 @@ const api = (async (method, path, body = null, options = {}) => {
     }
 
     if (!response.ok) {
-      const errorMsg =
-        data && data.message ? data.message : `Error ${response.status}`;
+      const errorMsg = data?.error || data?.message || `Error ${response.status}`;
+      log("error", `${method} ${url} failed: ${errorMsg}`, data);
       throw { status: response.status, message: errorMsg, data };
     }
 
+    log("info", `${method} ${url} OK`, data);
     return data;
   } catch (error) {
-    if (error.status) {
+    if (error?.status === 401 || error?.status === 403) {
       throw error;
     }
-    throw { status: 0, message: error.message || "Error de red", data: null };
+    if (attempt < MAX_RETRIES && (error.status === 0 || error.status >= 500)) {
+      log("warn", `Reintentando (${attempt}/${MAX_RETRIES})...`, error);
+      await sleep(RETRY_DELAY_MS * attempt);
+      return api(method, path, body, options, attempt + 1);
+    }
+    if (!error.status) {
+      log("error", `Error de red: ${error.message}`);
+      throw { status: 0, message: error.message || "Error de red", data: null };
+    }
+    throw error;
   }
 });
 

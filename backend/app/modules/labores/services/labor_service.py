@@ -2,8 +2,10 @@
 
 from datetime import date
 
+from app.modules.fincas.repositories.finca_repository import FincaRepository
 from app.modules.labores.entities.models import Labor
 from app.modules.labores.repositories.labor_repository import LaborRepository
+from app.modules.lotes.repositories.lote_repository import LoteRepository
 from app.shared.utils.app_exception import AppException
 
 
@@ -46,15 +48,23 @@ class LaborService:
     ) -> Labor:
         """Validate and create a new labor record."""
         if estado is None:
-            estado = "Programada"
+            estado = "Pendiente"
 
         tipos_validos = {"siembra", "fertilizacion", "fumigacion", "poda", "riego", "cosecha"}
         if tipo not in tipos_validos:
             raise AppException(f"Tipo de labor invalido. Validos: {', '.join(sorted(tipos_validos))}.", 400)
 
-        estados_validos = {"Programada", "Completada", "Pendiente", "Vencida"}
+        estados_validos = {"Pendiente", "Por confirmar", "Completada", "Vencida"}
         if estado not in estados_validos:
             raise AppException(f"Estado invalido. Validos: {', '.join(sorted(estados_validos))}.", 400)
+
+        if FincaRepository.get_by_id(finca_id) is None:
+            raise AppException("La finca seleccionada no existe.", 400)
+        lote = LoteRepository.get_by_id(lote_id)
+        if lote is None:
+            raise AppException("El lote seleccionado no existe.", 400)
+        if lote.finca_id != finca_id:
+            raise AppException("El lote no pertenece a la finca seleccionada.", 400)
 
         return LaborRepository.create(
             finca_id=finca_id,
@@ -84,7 +94,7 @@ class LaborService:
         if tipo is not None and tipo not in tipos_validos:
             raise AppException(f"Tipo de labor invalido.", 400)
 
-        estados_validos = {"Programada", "Completada", "Pendiente", "Vencida"}
+        estados_validos = {"Pendiente", "Por confirmar", "Completada", "Vencida"}
         if estado is not None and estado not in estados_validos:
             raise AppException(f"Estado invalido.", 400)
 

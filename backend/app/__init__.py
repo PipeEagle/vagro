@@ -10,6 +10,11 @@ from app.modules.labores.controllers.labor_controller import labores_bp
 from app.modules.lotes.controllers.lote_controller import lotes_bp
 from app.modules.cultivos.controllers.cultivo_controller import cultivos_bp
 from app.modules.usuarios.controllers.auth_controller import auth_bp, auth_pages_bp
+from app.modules.usuarios.controllers.user_controller import usuarios_bp
+from app.modules.fincas.controllers.finca_controller import fincas_bp
+from app.modules.cosechas.controllers.cosecha_controller import cosechas_bp
+from app.modules.insumos.controllers.insumo_controller import insumos_bp
+from app.modules.eventos.controllers.evento_controller import eventos_bp
 from app.modules.usuarios.services.auth_service import load_user
 from app.shared.utils.app_exception import AppException
 
@@ -37,13 +42,26 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     ma.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = "auth_pages.login_form"
+    login_manager.login_view = "auth_pages.spa_login_redirect"
     login_manager.user_loader(load_user)
+
+    @login_manager.unauthorized_handler
+    def handle_unauthorized():
+        """Return JSON errors for API requests and preserve browser redirects."""
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Se requiere iniciar sesion."}), 401
+        return redirect(url_for("auth_pages.spa_login_redirect"))
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(auth_pages_bp)
     app.register_blueprint(lotes_bp)
     app.register_blueprint(cultivos_bp)
     app.register_blueprint(labores_bp)
+    app.register_blueprint(usuarios_bp)
+    app.register_blueprint(fincas_bp)
+    app.register_blueprint(cosechas_bp)
+    app.register_blueprint(insumos_bp)
+    app.register_blueprint(eventos_bp)
 
     @app.get("/css/<path:filename>")
     def spa_css(filename):
@@ -67,6 +85,18 @@ def create_app(config_class: type[Config] = Config) -> Flask:
             raise NotFound()
         # Serve index.html for all SPA routes (router handles the view)
         return send_from_directory(SPA_DIR, "index.html")
+
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to all responses."""
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if request.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+        return response
 
     @app.errorhandler(AppException)
     def handle_app_exception(error: AppException) -> tuple[Response, int]:

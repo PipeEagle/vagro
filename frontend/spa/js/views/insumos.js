@@ -1,18 +1,18 @@
 /* Vista: Insumos (protegida) - Tabla limpia -> clic en fila abre detalle */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const InsumosView = (container) => {
   let selectedId = null;
-  let insumos = store.getState().insumos;
 
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
-    insumos = store.getState().insumos;
+    const insumos = store.getState().insumos || [];
 
     let insumosFiltrados = insumos;
-    if (user?.rol === "MAYORDOMO") {
+    if (user?.rol === "MAYORDOMO" && user.finca_id) {
       insumosFiltrados = insumos.filter((i) => i.finca_id === user.finca_id);
     } else if (fincaSeleccionada) {
       insumosFiltrados = insumos.filter((i) => i.finca_id === fincaSeleccionada);
@@ -37,26 +37,30 @@ export const InsumosView = (container) => {
                   <th>Tipo</th>
                   <th>Ingrediente activo</th>
                   <th>Carencia</th>
+                  <th>Cantidad</th>
                   <th>Unidad</th>
                 </tr>
               </thead>
               <tbody>
-                ${insumosFiltrados
-                  .map(
-                    (ins) => {
-                      const isSel = selectedId === ins.id;
-                      return `
-                  <tr class="${isSel ? "table-primary" : ""}" style="cursor:pointer;" data-insumo-id="${ins.id}">
-                    <td>${ins.nombre}</td>
-                    <td>${ins.tipo}</td>
-                    <td>${ins.ingrediente}</td>
-                    <td>${ins.carencia}</td>
-                    <td>${ins.unidad}</td>
-                  </tr>
-                `;
-                    }
-                  )
-                  .join("")}
+                ${insumosFiltrados.length > 0
+                  ? insumosFiltrados
+                      .map(
+                        (ins) => {
+                          const isSel = selectedId === ins.id;
+                          return `
+                    <tr class="${isSel ? "table-primary" : ""}" style="cursor:pointer;" data-insumo-id="${ins.id}">
+                      <td>${ins.nombre}</td>
+                      <td>${ins.tipo}</td>
+                      <td>${ins.ingrediente || "-"}</td>
+                      <td>${ins.carencia || "-"}</td>
+                      <td>${ins.cantidad == null ? "Sin registrar" : Number(ins.cantidad).toLocaleString("es-CO")}</td>
+                      <td>${ins.unidad}</td>
+                    </tr>
+                  `;
+                        }
+                      )
+                      .join("")
+                  : '<tr><td colspan="6" class="text-center text-muted py-3">No hay insumos registrados.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -85,7 +89,8 @@ export const InsumosView = (container) => {
     }
   };
 
-  const abrirModalNuevo = () => {
+  const abrirModalNuevo = async () => {
+    const { fincaSeleccionada, user } = store.getState();
     Modal({
       id: "modalNuevoInsumo",
       title: "Nuevo insumo",
@@ -97,7 +102,7 @@ export const InsumosView = (container) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Tipo</label>
-            <select class="form-select" name="tipo">
+            <select class="form-select" name="tipo" required>
               <option value="fertilizante">Fertilizante</option>
               <option value="fungicida">Fungicida</option>
               <option value="insecticida">Insecticida</option>
@@ -110,34 +115,64 @@ export const InsumosView = (container) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Periodo de carencia (dias)</label>
-            <input type="number" class="form-control" name="carencia">
+            <input type="number" class="form-control" name="carencia" min="0">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cantidad disponible</label>
+            <input type="number" class="form-control" name="cantidad" min="0" step="0.01" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Unidad</label>
-            <select class="form-select" name="unidad">
+            <select class="form-select" name="unidad" required>
               <option value="kg">kg</option>
               <option value="L">L</option>
             </select>
           </div>
         </form>
       `,
-      onConfirm: () => {
+      onConfirm: async () => {
         const form = document.getElementById("formNuevoInsumo");
         const fd = new FormData(form);
-        const { fincaSeleccionada, user } = store.getState();
-        const nuevo = {
-          id: Date.now(),
-          finca_id: fincaSeleccionada || user?.finca_id || 1,
-          nombre: fd.get("nombre"),
-          tipo: fd.get("tipo"),
-          ingrediente: fd.get("ingrediente"),
-          carencia: fd.get("carencia") || "-",
-          unidad: fd.get("unidad"),
-        };
-        insumos.push(nuevo);
-        store.setState({ insumos });
-        render();
-        showToast("Insumo creado correctamente", "success");
+        if (!validateRequired(fd, ["nombre", "tipo", "cantidad"])) return false;
+        const cantidad = Number(fd.get("cantidad"));
+        if (!Number.isFinite(cantidad) || cantidad < 0) {
+          showToast("La cantidad debe ser un numero igual o mayor que cero.", "danger");
+          return false;
+        }
+        const carencia = fd.get("carencia");
+        if (carencia !== "" && carencia !== null && parseFloat(carencia) < 0) {
+          alert("El periodo de carencia no puede ser negativo.");
+          return false;
+        }
+
+        const fincaId =
+          fincaSeleccionada || user?.finca_id || store.getDefaultFincaId();
+        if (!fincaId) {
+          showToast("No hay fincas disponibles para asignar el insumo.", "danger");
+          return false;
+        }
+
+        try {
+          const nuevo = await apiClient.post("/api/insumos", {
+            finca_id: fincaId,
+            nombre: fd.get("nombre"),
+            tipo: fd.get("tipo"),
+            ingrediente: fd.get("ingrediente") || null,
+            carencia: fd.get("carencia") || null,
+            cantidad,
+            unidad: fd.get("unidad") || "kg",
+          });
+
+          const { insumos } = store.getState();
+          store.setState({ insumos: [...insumos, nuevo] });
+
+          render();
+          showToast("Insumo creado correctamente", "success");
+        } catch (e) {
+          showToast(e.message || "Error al crear el insumo", "danger");
+          return false;
+        }
+        return true;
       },
       confirmLabel: "Crear",
     });

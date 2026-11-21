@@ -16,7 +16,7 @@ python run.py
 
 Si `.venv` ya existe, no vuelvas a crearla: activa el entorno e inicia Flask con `python run.py`. Inicia MySQL desde XAMPP y configura `backend/.env` con `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y `DB_PASSWORD`. No reemplaces un `.env` existente sin conservar sus valores, y no lo compartas.
 
-La pagina inicial esta en `http://127.0.0.1:5000`. El formulario HTML envia usuario y contrasena a `/login`; si las credenciales son validas, inicia sesion y abre el panel de administracion.
+La aplicacion se sirve como SPA en `http://127.0.0.1:5000`; el inicio de sesion usa `POST /api/auth/login`. La ruta `/login` redirige a la misma pantalla principal de acceso.
 
 ## API disponible
 

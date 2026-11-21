@@ -1,8 +1,10 @@
 /* Vista: CosechaDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { StatusBadge } from "../components/status-badge.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
+import { isFutureDate, isPastDate } from "../utils/date.js";
 
 export const CosechaDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -59,7 +61,11 @@ export const CosechaDetalleView = (container, { id }) => {
 
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo("/cosechas");
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/cosechas");
+      }
     });
 
     if (puedeEditar) {
@@ -73,7 +79,14 @@ export const CosechaDetalleView = (container, { id }) => {
     }
   };
 
-  const abrirModalEditar = () => {
+  const abrirModalEditar = async () => {
+    const cosechaEsPasada = isPastDate(cosecha.fecha);
+    const cosechaEsFutura = isFutureDate(cosecha.fecha);
+    const estadoSeleccionado = cosechaEsPasada
+      ? "Completada"
+      : cosechaEsFutura && cosecha.estado === "Completada"
+        ? "Pendiente"
+        : cosecha.estado;
     Modal({
       id: "modalEditarCosecha",
       title: "Editar cosecha",
@@ -81,11 +94,11 @@ export const CosechaDetalleView = (container, { id }) => {
         <form id="formEditarCosecha">
           <div class="mb-3">
             <label class="form-label">Cantidad</label>
-            <input type="number" class="form-control" name="cantidad" value="${cosecha.cantidad}" required>
+            <input type="number" class="form-control" name="cantidad" value="${cosecha.cantidad}" min="0" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Calidad</label>
-            <select class="form-select" name="calidad">
+            <select class="form-select" name="calidad" required>
               <option value="Primera" ${cosecha.calidad === "Primera" ? "selected" : ""}>Primera</option>
               <option value="Segunda" ${cosecha.calidad === "Segunda" ? "selected" : ""}>Segunda</option>
               <option value="Rechazo" ${cosecha.calidad === "Rechazo" ? "selected" : ""}>Rechazo</option>
@@ -93,40 +106,73 @@ export const CosechaDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
-              <option value="Programada" ${cosecha.estado === "Programada" ? "selected" : ""}>Programada</option>
-              <option value="Completada" ${cosecha.estado === "Completada" ? "selected" : ""}>Completada</option>
+            <select class="form-select" name="estado" required ${cosechaEsPasada ? "disabled" : ""}>
+              <option value="Pendiente" ${estadoSeleccionado === "Pendiente" ? "selected" : ""}>Pendiente</option>
+              <option value="Por confirmar" ${estadoSeleccionado === "Por confirmar" ? "selected" : ""}>Por confirmar</option>
+              <option value="Completada" ${estadoSeleccionado === "Completada" ? "selected" : ""} ${cosechaEsFutura ? "disabled" : ""}>Completada</option>
             </select>
+            ${cosechaEsPasada ? '<div class="form-text">Por tener fecha anterior a hoy, esta cosecha debe estar Completada.</div>' : cosechaEsFutura ? '<div class="form-text">No se puede marcar como Completada antes de la fecha asignada.</div>' : ""}
           </div>
         </form>
       `,
-      onConfirm: () => {
+      onConfirm: async () => {
         const form = document.getElementById("formEditarCosecha");
         const fd = new FormData(form);
-        cosecha.cantidad = parseFloat(fd.get("cantidad"));
-        cosecha.calidad = fd.get("calidad");
-        cosecha.estado = fd.get("estado");
-        const { cosechas } = store.getState();
-        const idx = cosechas.findIndex((c) => c.id === cosecha.id);
-        if (idx !== -1) cosechas[idx] = cosecha;
-        store.setState({ cosechas });
-        render();
-        showToast("Cosecha actualizada", "success");
+        if (!validateRequired(fd, ["cantidad", "calidad"])) return false;
+        const estado = isPastDate(cosecha.fecha) ? "Completada" : fd.get("estado");
+        if (!estado) {
+          showToast("Selecciona el estado de la cosecha.", "danger");
+          return false;
+        }
+        if (isFutureDate(cosecha.fecha) && estado === "Completada") {
+          showToast("Una cosecha futura no puede marcarse como Completada antes de su fecha.", "danger");
+          return false;
+        }
+
+        try {
+          const actualizada = await apiClient.put(`/api/cosechas/${cosecha.id}`, {
+            cantidad: parseFloat(fd.get("cantidad")),
+            calidad: fd.get("calidad"),
+            estado,
+          });
+
+          const { cosechas } = store.getState();
+          const idx = cosechas.findIndex((c) => c.id === cosecha.id);
+          if (idx !== -1) {
+            const updated = [...cosechas];
+            updated[idx] = actualizada;
+            store.setState({ cosechas: updated });
+          }
+
+          render();
+          showToast("Cosecha actualizada", "success");
+        } catch (e) {
+          showToast(e.message || "Error al actualizar la cosecha", "danger");
+          return false;
+        }
+        return true;
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (!confirm("¿Estas seguro de eliminar esta cosecha?")) return;
-        const { cosechas } = store.getState();
-        cosechas = cosechas.filter((c) => c.id !== cosecha.id);
-        store.setState({ cosechas });
-        showToast("Cosecha eliminada", "info");
-        goTo("/cosechas");
+      onDelete: async () => {
+        if (!confirm("¿Estas seguro de eliminar esta cosecha?")) return false;
+
+        try {
+          await apiClient.delete(`/api/cosechas/${cosecha.id}`);
+          const { cosechas } = store.getState();
+          store.setState({ cosechas: cosechas.filter((c) => c.id !== cosecha.id) });
+          showToast("Cosecha eliminada", "info");
+          goTo("/cosechas");
+        } catch (e) {
+          showToast(e.message || "Error al eliminar la cosecha", "danger");
+          return false;
+        }
+        return true;
       },
       deleteLabel: "Eliminar",
     });
   };
 
-  const abrirModalEliminar = () => {
+  const abrirModalEliminar = async () => {
     Modal({
       id: "modalEliminarCosecha",
       title: "Eliminar cosecha",
@@ -134,12 +180,18 @@ export const CosechaDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar la cosecha del lote <strong>${cosecha.lote_codigo_qr}</strong>?</p>
         <p class="text-danger">Esta accion no se puede deshacer.</p>
       `,
-      onDelete: () => {
-        const { cosechas } = store.getState();
-        cosechas = cosechas.filter((c) => c.id !== cosecha.id);
-        store.setState({ cosechas });
-        showToast("Cosecha eliminada", "info");
-        goTo("/cosechas");
+      onDelete: async () => {
+        try {
+          await apiClient.delete(`/api/cosechas/${cosecha.id}`);
+          const { cosechas } = store.getState();
+          store.setState({ cosechas: cosechas.filter((c) => c.id !== cosecha.id) });
+          showToast("Cosecha eliminada", "info");
+          goTo("/cosechas");
+        } catch (e) {
+          showToast(e.message || "Error al eliminar la cosecha", "danger");
+          return false;
+        }
+        return true;
       },
       deleteLabel: "Eliminar",
       showDelete: true,

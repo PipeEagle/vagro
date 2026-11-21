@@ -13,14 +13,12 @@ from flask import (
     redirect,
     render_template,
     request,
-    url_for,
 )
 from flask_login import current_user, login_required, login_user, logout_user
 from marshmallow import ValidationError
 
 from app.modules.usuarios.dtos.auth_dtos import login_schema
 from app.modules.usuarios.services.auth_service import AuthService
-from app.shared.utils.app_exception import AppException
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -46,47 +44,9 @@ def admin_required(
 
 
 @auth_pages_bp.route("/login", methods=["GET", "POST"])
-def login_form() -> str | tuple[str, int] | Response:
-    """Render the sign-in form and authenticate submitted browser credentials."""
-    if request.method == "GET":
-        return render_template("admin/login.html")
-
-    username = request.form.get("username", "")
-    try:
-        credentials = login_schema.load(
-            {
-                "username": username,
-                "password": request.form.get("password", ""),
-            }
-        )
-    except ValidationError:
-        return (
-            render_template(
-                "admin/login.html",
-                error="Ingresa un usuario y una contrasena validos.",
-                username=username,
-            ),
-            400,
-        )
-
-    try:
-        user = AuthService.authenticate(
-            username=credentials["username"],
-            password=credentials["password"],
-        )
-    except AppException as error:
-        return (
-            render_template(
-                "admin/login.html",
-                error=error.message,
-                username=username,
-            ),
-            error.status_code,
-        )
-
-    login_user(user)
-    current_app.logger.info("Administrator %s signed in through the web form.", user.username)
-    return redirect(url_for("auth_pages.admin_dashboard"))
+def spa_login_redirect() -> Response:
+    """Send legacy login URLs to the SPA's single sign-in screen."""
+    return redirect("/")
 
 
 @auth_pages_bp.get("/admin/dashboard")
@@ -122,6 +82,7 @@ def login() -> tuple[Response, int] | Response:
                 "username": user.username,
                 "nombre_completo": user.nombre_completo,
                 "rol": user.rol,
+                "finca_id": user.finca_id,
             },
         }
     )
@@ -130,8 +91,6 @@ def login() -> tuple[Response, int] | Response:
 @auth_bp.post("/logout")
 def logout() -> tuple[Response, int] | Response:
     """End the current administrator session."""
-    if not current_user.is_authenticated:
-        return jsonify({"error": "No hay una sesion activa."}), 401
     logout_user()
     return jsonify({"message": "Sesion cerrada."})
 

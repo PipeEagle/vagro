@@ -1,8 +1,9 @@
 /* Vista: LaborDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { StatusBadge } from "../components/status-badge.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const LaborDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -64,13 +65,13 @@ export const LaborDetalleView = (container, { id }) => {
       </div>
     `;
 
-    const { returnTo } = store.getState();
-    const rutaAtras = returnTo || "/labores";
-
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo(rutaAtras);
-      store.setState({ returnTo: null });
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/labores");
+      }
     });
 
     if (puedeEditar) {
@@ -85,6 +86,8 @@ export const LaborDetalleView = (container, { id }) => {
   };
 
   const abrirModalEditar = () => {
+    const hoy = new Date().toISOString().split("T")[0];
+    const fechaMinima = labor.fecha < hoy ? labor.fecha : hoy;
     Modal({
       id: "modalEditarLabor",
       title: `Editar labor`,
@@ -92,7 +95,7 @@ export const LaborDetalleView = (container, { id }) => {
         <form id="formEditarLabor">
           <div class="mb-3">
             <label class="form-label">Tipo de labor</label>
-            <select class="form-select" name="tipo">
+            <select class="form-select" name="tipo" required>
               <option value="fertilizacion" ${labor.tipo === "fertilizacion" ? "selected" : ""}>Fertilizacion</option>
               <option value="fumigacion" ${labor.tipo === "fumigacion" ? "selected" : ""}>Fumigacion</option>
               <option value="poda" ${labor.tipo === "poda" ? "selected" : ""}>Poda</option>
@@ -103,13 +106,13 @@ export const LaborDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Fecha</label>
-            <input type="date" class="form-control" name="fecha" value="${labor.fecha}" required>
+            <input type="date" class="form-control" name="fecha" value="${labor.fecha}" required min="${fechaMinima}">
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
-              <option value="Programada" ${labor.estado === "Programada" ? "selected" : ""}>Programada</option>
+            <select class="form-select" name="estado" required>
               <option value="Pendiente" ${labor.estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
+              <option value="Por confirmar" ${labor.estado === "Por confirmar" ? "selected" : ""}>Por confirmar</option>
               <option value="Completada" ${labor.estado === "Completada" ? "selected" : ""}>Completada</option>
             </select>
           </div>
@@ -118,27 +121,89 @@ export const LaborDetalleView = (container, { id }) => {
       onConfirm: () => {
         const form = document.getElementById("formEditarLabor");
         const fd = new FormData(form);
+        if (!validateRequired(fd, ["tipo", "fecha", "estado"])) return false;
+        const fechaLabor = fd.get("fecha");
+        const hoy = new Date().toISOString().split("T")[0];
+        const estadoNuevo = fd.get("estado");
+        /* Solo bloquear fechas pasadas si el usuario cambia la fecha a una anterior. */
+        if (fechaLabor !== labor.fecha && fechaLabor < hoy) {
+          alert("No se pueden programar labores para fechas anteriores a hoy.");
+          return false;
+        }
+        /* Si la fecha es pasada, solo se permite estado Completada. */
+        if (fechaLabor < hoy && estadoNuevo !== "Completada") {
+          alert("Una labor con fecha pasada solo puede estar en estado Completada.");
+          return false;
+        }
         labor.tipo = fd.get("tipo");
         labor.fecha = fd.get("fecha");
         labor.estado = fd.get("estado");
-        const { labores } = store.getState();
+        const { labores, eventos } = store.getState();
         const idx = labores.findIndex((l) => l.id === labor.id);
         if (idx !== -1) labores[idx] = labor;
-        store.setState({ labores });
+
+        /* Sincronizar estado con el array de eventos del calendario */
+        const estadoCalendario =
+          labor.estado === "Completada" ? "Realizada" : labor.estado;
+        const eventosActualizados = eventos.map((e) => {
+          if (
+            e.fecha === labor.fecha &&
+            e.tipo === labor.tipo &&
+            e.finca_id === labor.finca_id
+          ) {
+            return { ...e, estado: estadoCalendario };
+          }
+          return e;
+        });
+
+        store.setState({ labores, eventos: eventosActualizados });
         render();
         showToast("Labor actualizada", "success");
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (!confirm("¿Estas seguro de eliminar esta labor?")) return;
-        const { labores } = store.getState();
-        labores = labores.filter((l) => l.id !== labor.id);
-        store.setState({ labores });
-        showToast("Labor eliminada", "info");
-        goTo("/labores");
-      },
-      deleteLabel: "Eliminar",
     });
+  };
+
+  const eliminarLabor = async () => {
+    const { labores = [], eventos = [] } = store.getState();
+    try {
+      await apiClient.delete(`/api/labores/${labor.id}`);
+    } catch (error) {
+      showToast(error.message || "Error al eliminar la labor", "danger");
+      return false;
+    }
+
+    const eventoRelacionado = eventos.find(
+      (evento) =>
+        evento.fecha === labor.fecha &&
+        evento.tipo === labor.tipo &&
+        evento.finca_id === labor.finca_id &&
+        evento.titulo === `${labor.tipo} - ${labor.lote_codigo_qr}`
+    );
+    const resultadosEventos = await Promise.allSettled(
+      eventoRelacionado
+        ? [apiClient.delete(`/api/eventos/${eventoRelacionado.id}`)]
+        : []
+    );
+    const eventosEliminados = new Set(
+      resultadosEventos[0]?.status === "fulfilled" ? [eventoRelacionado.id] : []
+    );
+    const hayEventosFallidos = resultadosEventos.some(
+      (resultado) => resultado.status === "rejected"
+    );
+
+    store.setState({
+      labores: labores.filter((item) => item.id !== labor.id),
+      eventos: eventos.filter((evento) => !eventosEliminados.has(evento.id)),
+    });
+    showToast(
+      hayEventosFallidos
+        ? "Labor eliminada; no se pudieron eliminar todos sus eventos del calendario."
+        : "Labor eliminada",
+      hayEventosFallidos ? "warning" : "success"
+    );
+    goTo("/labores");
+    return true;
   };
 
   const abrirModalEliminar = () => {
@@ -149,13 +214,7 @@ export const LaborDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar la labor <strong>${labor.tipo}</strong> del lote <strong>${labor.lote_codigo_qr}</strong>?</p>
         <p class="text-danger">Esta accion no se puede deshacer.</p>
       `,
-      onDelete: () => {
-        const { labores } = store.getState();
-        labores = labores.filter((l) => l.id !== labor.id);
-        store.setState({ labores });
-        showToast("Labor eliminada", "info");
-        goTo("/labores");
-      },
+      onDelete: eliminarLabor,
       deleteLabel: "Eliminar",
       showDelete: true,
     });

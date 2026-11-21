@@ -3,6 +3,7 @@
 from marshmallow import fields, validate
 
 from app.extensions import ma
+from app.shared.utils.validators import validate_not_blank
 
 
 class CultivoSchema(ma.Schema):
@@ -14,7 +15,7 @@ class CultivoSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
     nombre = fields.String(
         required=True,
-        validate=validate.Length(min=1, max=100),
+        validate=[validate.Length(min=1, max=100), validate_not_blank],
     )
     descripcion = fields.String(allow_none=True)
     ciclo_estimado_dias = fields.Integer(allow_none=True)
@@ -27,7 +28,7 @@ class CultivoCreateSchema(ma.Schema):
 
     nombre = fields.String(
         required=True,
-        validate=validate.Length(min=1, max=100),
+        validate=[validate.Length(min=1, max=100), validate_not_blank],
     )
     descripcion = fields.String(allow_none=True)
     ciclo_estimado_dias = fields.Integer(allow_none=True)

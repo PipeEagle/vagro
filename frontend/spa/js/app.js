@@ -45,6 +45,19 @@ const showToast = (message, type = "info") => {
   setTimeout(() => toast.remove(), 5000);
 };
 
+/* Valida que los campos requeridos del FormData no esten vacíos.
+   Retorna true si todo esta completo, false y muestra toast si falta alguno. */
+const validateRequired = (fd, fields) => {
+  for (const field of fields) {
+    const value = fd.get(field);
+    if (value == null || value.toString().trim() === "") {
+      alert("Faltan datos: complete todos los campos requeridos antes de guardar.");
+      return false;
+    }
+  }
+  return true;
+};
+
 const requireAuth = () => {
   const { isAuthenticated } = store.getState();
   if (!isAuthenticated) {
@@ -220,20 +233,40 @@ const renderNotFound = () => {
 };
 
 const initApp = async () => {
-  /* Cargar fincas mock siempre */
-  store.setState({
-    fincas: [
-      { id: 1, nombre: "Finca Norte", municipio: "Salento", departamento: "Quindio", estado: "ACTIVO" },
-      { id: 2, nombre: "Finca Sur", municipio: "Filandia", departamento: "Quindio", estado: "ACTIVO" },
-      { id: 3, nombre: "Finca Central", municipio: "Circasia", departamento: "Quindio", estado: "EN_DESCANSO" },
-    ],
-    usuariosRegistrados: [
-      { id: 1, username: "admin", nombre_completo: "Administrador", rol: "SUPERADMIN", estado: "Activo", finca_id: null, password: "Admin123!" },
-      { id: 2, username: "ingeniero", nombre_completo: "Ingeniero Agronomo", rol: "ADMIN", estado: "Activo", finca_id: null, password: "Ing123!" },
-      { id: 3, username: "mayordomo1", nombre_completo: "Mayordomo Finca Norte", rol: "MAYORDOMO", estado: "Activo", finca_id: 1, password: "May123!" },
-      { id: 4, username: "mayordomo2", nombre_completo: "Mayordomo Finca Sur", rol: "MAYORDOMO", estado: "Activo", finca_id: 2, password: "May123!" },
-    ],
-  });
+  /* Cargar datos iniciales desde la API */
+  let loadOk = false;
+  try {
+    const results = await Promise.allSettled([
+      apiClient.get("/api/fincas"),
+      apiClient.get("/api/usuarios"),
+      apiClient.get("/api/lotes"),
+      apiClient.get("/api/labores"),
+      apiClient.get("/api/cosechas"),
+      apiClient.get("/api/insumos"),
+      apiClient.get("/api/eventos"),
+    ]);
+
+    const keys = [
+      "fincas",
+      "usuariosRegistrados",
+      "lotes",
+      "labores",
+      "cosechas",
+      "insumos",
+      "eventos",
+    ];
+    results.forEach((res, i) => {
+      if (res.status === "fulfilled") {
+        store.setState({ [keys[i]]: res.value });
+      } else {
+        console.error(`[initApp] Failed to load ${keys[i]}:`, res.reason);
+      }
+    });
+    loadOk = true;
+  } catch (e) {
+    console.error("[initApp] Critical error loading data:", e);
+    showToast("Error cargando datos iniciales", "danger");
+  }
 
   /* Verificar sesion existente al cargar */
   try {
@@ -243,11 +276,15 @@ const initApp = async () => {
       if (res.user.rol === "MAYORDOMO" && res.user.finca_id) {
         store.setState({ fincaSeleccionada: res.user.finca_id });
       } else if (res.user.rol === "SUPERADMIN" || res.user.rol === "ADMIN") {
-        store.setState({ fincaSeleccionada: 1 });
+        store.setState({ fincaSeleccionada: store.getDefaultFincaId() });
       }
     }
   } catch (e) {
-    /* Sin sesion activa, continuar como visitante */
+    console.warn("[initApp] No active session:", e);
+  }
+
+  if (!loadOk) {
+    showToast("Algunos datos no pudieron cargarse. Refresca la pagina.", "warning");
   }
 
   /* Registrar rutas (solo para matchRoute) */
@@ -286,4 +323,4 @@ export const generateQR = (data) => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
 };
 
-export { mount, showToast, requireAuth, goTo };
+export { mount, showToast, requireAuth, goTo, validateRequired };

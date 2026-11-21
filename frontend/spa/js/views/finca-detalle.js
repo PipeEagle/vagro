@@ -1,7 +1,8 @@
 /* Vista: FincaDetalle - Detalle completo con botones Editar/Eliminar */
 import store from "../store.js";
+import { apiClient } from "../services/api.js";
 import { Modal } from "../components/modal.js";
-import { showToast, goTo } from "../app.js";
+import { showToast, goTo, validateRequired } from "../app.js";
 
 export const FincaDetalleView = (container, { id }) => {
   const { user } = store.getState();
@@ -10,8 +11,12 @@ export const FincaDetalleView = (container, { id }) => {
   let finca = null;
 
   const render = () => {
-    const { fincas } = store.getState();
+    const { fincas, usuariosRegistrados } = store.getState();
     finca = fincas.find((f) => f.id === parseInt(id));
+    if (finca) {
+      const mayordomo = usuariosRegistrados.find((u) => u.finca_id === finca.id);
+      finca.mayordomo_nombre = mayordomo ? mayordomo.username : null;
+    }
     if (!finca) {
       container.innerHTML = `
         <div class="container py-5">
@@ -45,6 +50,7 @@ export const FincaDetalleView = (container, { id }) => {
                 <p><strong>Municipio:</strong> ${finca.municipio}</p>
                 <p><strong>Departamento:</strong> ${finca.departamento}</p>
                 <p><strong>Estado:</strong> <span class="badge bg-${finca.estado === "ACTIVO" ? "success" : finca.estado === "EN_DESCANSO" ? "warning" : "secondary"}">${finca.estado}</span></p>
+                <p><strong>Mayordomo:</strong> ${finca.mayordomo_nombre || "-"}</p>
               </div>
             </div>
           </div>
@@ -54,7 +60,11 @@ export const FincaDetalleView = (container, { id }) => {
 
     document.getElementById("btnAtras").addEventListener("click", (e) => {
       e.preventDefault();
-      goTo("/fincas");
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goTo("/fincas");
+      }
     });
 
     if (puedeEditar) {
@@ -69,6 +79,12 @@ export const FincaDetalleView = (container, { id }) => {
   };
 
   const abrirModalEditar = () => {
+    const { usuariosRegistrados } = store.getState();
+    const mayordomoActual = usuariosRegistrados.find((u) => u.finca_id === finca.id);
+    const mayordomosDisponibles = usuariosRegistrados.filter(
+      (u) => u.rol === "MAYORDOMO" && (!u.finca_id || u.finca_id === null || u.id === mayordomoActual?.id)
+    );
+
     Modal({
       id: "modalEditarFinca",
       title: `Editar ${finca.nombre}`,
@@ -88,39 +104,75 @@ export const FincaDetalleView = (container, { id }) => {
           </div>
           <div class="mb-3">
             <label class="form-label">Estado</label>
-            <select class="form-select" name="estado">
+            <select class="form-select" name="estado" required>
               <option value="ACTIVO" ${finca.estado === "ACTIVO" ? "selected" : ""}>Activo</option>
               <option value="EN_DESCANSO" ${finca.estado === "EN_DESCANSO" ? "selected" : ""}>En descanso</option>
             </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Asignar mayordomo</label>
+            <select class="form-select" name="mayordomo_id">
+              <option value="">Sin asignar</option>
+              ${mayordomosDisponibles
+                .map(
+                  (m) =>
+                    `<option value="${m.id}" ${mayordomoActual && m.id === mayordomoActual.id ? "selected" : ""}>${m.username} - ${m.nombre_completo}</option>`
+                )
+                .join("")}
+            </select>
+            ${mayordomosDisponibles.length === 0 ? '<div class="form-text text-muted">No hay mayordomos disponibles.</div>' : ""}
           </div>
         </form>
       `,
       onConfirm: () => {
         const form = document.getElementById("formEditarFinca");
         const fd = new FormData(form);
+        if (!validateRequired(fd, ["nombre", "municipio", "departamento"])) return false;
         finca.nombre = fd.get("nombre");
         finca.municipio = fd.get("municipio");
         finca.departamento = fd.get("departamento");
         finca.estado = fd.get("estado");
-        store.setState({ fincas });
+
+        // Desasignar mayordomo anterior si se cambia
+        const nuevoMayordomoId = fd.get("mayordomo_id");
+        if (mayordomoActual && mayordomoActual.id !== parseInt(nuevoMayordomoId)) {
+          mayordomoActual.finca_id = null;
+        }
+
+        // Asignar nuevo mayordomo
+        if (nuevoMayordomoId) {
+          const mayordomo = usuariosRegistrados.find((u) => u.id === parseInt(nuevoMayordomoId));
+          if (mayordomo) {
+            mayordomo.finca_id = finca.id;
+          }
+        }
+
+        store.setState({ fincas, usuariosRegistrados });
         render();
         showToast("Finca actualizada", "success");
       },
       confirmLabel: "Guardar cambios",
-      onDelete: () => {
-        if (!confirm("¿Estas seguro de eliminar esta finca?")) return;
-        const currentUsuarios = store.getState().usuariosRegistrados || [];
-        currentUsuarios.forEach((u) => {
-          if (u.finca_id === finca.id) u.finca_id = null;
-        });
-        store.setState({ usuariosRegistrados: currentUsuarios });
-        fincas = fincas.filter((f) => f.id !== finca.id);
-        store.setState({ fincas });
-        showToast("Finca eliminada", "info");
-        goTo("/fincas");
-      },
-      deleteLabel: "Eliminar",
     });
+  };
+
+  const eliminarFinca = async () => {
+    try {
+      await apiClient.delete(`/api/fincas/${finca.id}`);
+    } catch (error) {
+      showToast(error.message || "Error al eliminar la finca", "danger");
+      return false;
+    }
+
+    const { fincas: currentFincas = [], usuariosRegistrados = [] } = store.getState();
+    store.setState({
+      fincas: currentFincas.filter((item) => item.id !== finca.id),
+      usuariosRegistrados: usuariosRegistrados.map((usuario) =>
+        usuario.finca_id === finca.id ? { ...usuario, finca_id: null } : usuario
+      ),
+    });
+    showToast("Finca eliminada", "success");
+    goTo("/fincas");
+    return true;
   };
 
   const abrirModalEliminar = () => {
@@ -131,17 +183,7 @@ export const FincaDetalleView = (container, { id }) => {
         <p>¿Estas seguro de eliminar la finca <strong>${finca.nombre}</strong>?</p>
         <p class="text-danger">Esta accion no se puede deshacer.</p>
       `,
-      onDelete: () => {
-        const currentUsuarios = store.getState().usuariosRegistrados || [];
-        currentUsuarios.forEach((u) => {
-          if (u.finca_id === finca.id) u.finca_id = null;
-        });
-        store.setState({ usuariosRegistrados: currentUsuarios });
-        fincas = fincas.filter((f) => f.id !== finca.id);
-        store.setState({ fincas });
-        showToast("Finca eliminada", "info");
-        goTo("/fincas");
-      },
+      onDelete: eliminarFinca,
       deleteLabel: "Eliminar",
       showDelete: true,
     });
