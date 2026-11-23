@@ -1,82 +1,27 @@
-# Migraciones - AgroGestion Backend
-
-Plan de migraciones para la base de datos MySQL de AgroGestion.
+# Esquema y migraciones de AgroGestion
 
 ## Estado actual
 
-La base de datos `agrogestion` ya existe en MySQL/MariaDB local (XAMPP, puerto 3306) con las tablas:
-- `usuarios`
-- `cultivos`
-- `lotes`
-- `labores` (vacía)
+- La aplicación no crea tablas ni modifica la base de datos al arrancar.
+- `Flask-Migrate` está declarado en `requirements.txt`, pero no se registra en `app/extensions.py` ni se inicializa en la fábrica Flask. Por tanto, los comandos `flask db` no forman parte del flujo configurado actualmente.
+- `database/migrations/` contiene scripts SQL puntuales; no constituye un historial Alembic completo ni una instalación inicial verificada.
+- `backend/scripts/crear_base_datos.sql` crea únicamente la base de datos, no sus tablas.
+- `database/init.sql` incluye DDL y datos de ejemplo, pero presenta diferencias conocidas con los modelos ORM. Revisa [MODELO_DATOS.md](./MODELO_DATOS.md) antes de utilizarlo.
 
-El script `database/init.sql` en la raíz del proyecto está vacío (solo comentarios de encabezado).
+## Procedimiento para un cambio de esquema
 
-## Estrategia de migración
+1. Identifica y respalda la base de datos destino.
+2. Compara el esquema real con los modelos de `backend/app/modules/*/entities/models.py`.
+3. Escribe un cambio SQL revisable y compatible con los datos existentes. Evita recrear tablas o ejecutar seeds sin comprobar sus efectos.
+4. Aplica el cambio primero en una base local aislada.
+5. Ejecuta las pruebas automatizadas y verifica las operaciones relevantes contra el motor MySQL/MariaDB previsto.
+6. Registra el propósito, el orden de aplicación y cualquier paso de reversión del script.
 
-El backend usa **Flask-SQLAlchemy** con **PyMySQL**. Por ahora no se ejecuta `Flask-Migrate`/`Alembic` automáticamente.
+No uses las pruebas SQLite como prueba de compatibilidad completa con MySQL; los motores tienen diferencias de tipos, enums y restricciones.
 
-### Reglas de migración
+## Conexión de verificación
 
-1. **Nunca recrear tablas durante cada sprint** — la evolución del esquema debe ser controlada
-2. **Generar, revisar y aplicar migración con `flask db upgrade`** cuando se implemente Flask-Migrate
-3. **Cualquier cambio de esquema requiere script SQL manual** y revisión de impacto antes de aplicar
-4. **No crear tablas adicionales en v1.0** — solo las cuatro tablas existentes
-
-## Scripts de base de datos
-
-### `scripts/crear_base_datos.sql`
-
-Script para crear la base de datos `agrogestion` si no existe. Solo crea la BD, no las tablas.
-
-```sql
-CREATE DATABASE IF NOT EXISTS agrogestion
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-```
-
-### `scripts/crear_admin.py`
-
-Script manual para crear el primer administrador (hash BCrypt generado en tiempo de ejecución).
-
-```python
-from app import create_app
-from app.extensions import db, bcrypt
-from app.modules.usuarios.entities.models import Usuario
-
-app = create_app()
-with app.app_context():
-    username = "admin"
-    password = "Admin123!"
-    password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
-    
-    existing = Usuario.query.filter_by(username=username).first()
-    if existing:
-        print(f"El usuario '{username}' ya existe.")
-    else:
-        admin = Usuario(
-            username=username,
-            password_hash=password_hash,
-            nombre_completo="Administrador Principal",
-            rol="SUPERADMIN",
-            is_active=True
-        )
-        db.session.add(admin)
-        db.session.commit()
-        print(f"Administrador '{username}' creado exitosamente.")
-```
-
-## Plan de implementación posterior
-
-1. Instalar `Flask-Migrate` y `alembic` en `requirements.txt`
-2. Inicializar migraciones: `flask db init`
-3. Generar migración inicial basada en modelos existentes: `flask db migrate -m "initial schema"`
-4. Aplicar migración: `flask db upgrade`
-5. Verificar conectividad: `SELECT 1` y `SHOW TABLES`
-
-## Verificación
-
-Desde el entorno virtual activado en `backend/`:
+Con MySQL iniciado y `backend/.env` configurado, desde `backend` se puede comprobar la conexión sin modificar el esquema:
 
 ```powershell
 $env:FLASK_APP = "run:app"
@@ -87,5 +32,6 @@ flask shell
 from sqlalchemy import text
 from app.extensions import db
 db.session.execute(text("SELECT 1")).scalar_one()
-# Resultado esperado: 1
 ```
+
+El resultado `1` confirma conectividad, no que el esquema esté sincronizado.

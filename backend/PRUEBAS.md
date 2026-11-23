@@ -1,64 +1,39 @@
-# Pruebas - AgroGestion Backend
+# Pruebas del backend AgroGestion
 
-Estrategia de pruebas para el backend de AgroGestion, siguiendo el patrón del manual ALOJAMIENTOS (fase 06.01).
+## Entorno
 
-## Alcance de pruebas
+La suite está en `backend/tests/`. El fixture de `conftest.py` configura SQLite en memoria, crea las tablas de los modelos para el test y las elimina al finalizar. Las pruebas no requieren MySQL/XAMPP y no deben modificar una base local de desarrollo.
 
-| Tipo | Herramienta | Alcance |
-|------|-------------|---------|
-| Unitarias | pytest | Servicios, repositorios, DTOs, utilidades compartidas |
-| Integración | pytest + MySQL de prueba | Autenticación, consulta pública QR, conexión a BD |
-| Funcionales | Postman / curl | Endpoints REST, códigos HTTP, respuestas JSON |
-| Regresión | pytest | Re-test después de cambios en backend |
-| Seguridad | Postman / pytest | 401 sin credenciales, 403 sin rol admin, 404 lote inexistente |
+## Ejecución en Windows
 
-## Entorno de pruebas
-
-- Base de datos MySQL de prueba separada (no usar la BD de desarrollo para pruebas destructivas)
-- Fixtures para registro, permisos, CRUD e imágenes (cuando existan)
-- Variables de entorno por entorno (`.env` no versionado)
-
-## Casos de prueba prioritarios
-
-### Autenticación (`/api/auth/login`)
-
-1. Credenciales válidas → 200 con `message` y `user` (username, nombre_completo, rol)
-2. Credenciales inválidas → 401
-3. Cuerpo no JSON → 400
-4. Campos faltantes → 400 (validación Marshmallow)
-5. Usuario inactivo → 401
-6. Logout sin sesión → 401
-
-### Consulta pública de lote (`/api/lotes/qr/:codigo_qr`)
-
-1. Lote ACTIVO existente → 200 con `{nombre, estado, cultivo, hectareas}`
-2. Lote inexistente → 404
-3. Lote inactivo (EN_DESCANSO o FINALIZADO) → 404
-4. Sin autenticación requerida → 200 (público)
-
-### Utilidades compartidas
-
-1. `generate_qr_base64(data)` retorna string base64 válido
-2. `AppException(message, status_code)` tiene atributos `message` y `status_code`
-
-## Ejecución
-
-Desde `backend/` con entorno virtual activado:
+Desde PowerShell, en la carpeta `backend`:
 
 ```powershell
-# Instalar dependencias de prueba (si no están en requirements.txt)
-pip install pytest pytest-flask
-
-# Ejecutar todas las pruebas
-pytest
-
-# Ejecutar con reporte detallado
-pytest -v
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-## Línea base
+Para obtener el detalle de cada caso:
 
-Registrar versiones Python/Node/MySQL, commit, pruebas ejecutadas y bloqueos reales.
-Separar backend implementado de pendientes y del despliegue Docker no ejecutado.
+```powershell
+.\.venv\Scripts\python.exe -m pytest -v
+```
 
-No confundir ejemplos de documentación con código ya escrito o pruebas ejecutadas.
+Las dependencias, incluido `pytest`, ya están declaradas en `requirements.txt`; no es necesario instalarlas aparte si se usó el script de arranque.
+
+## Cobertura actual
+
+Los casos existentes comprueban, entre otros:
+
+- Creación de la aplicación, conexión al SQLite de prueba y respuestas 401 de la API.
+- Inicio de sesión, carga de usuarios, datos de sesión de mayordomo y redirección de la ruta antigua de dashboard a la SPA.
+- Validación de campos requeridos en fincas.
+- Asociación de labores con fincas y lotes existentes.
+- Actualización y eliminación de lotes, y rechazo de eliminaciones con dependencias.
+- Cantidad de insumos y actualización parcial de cosechas.
+- Reglas de fechas para cosechas pasadas y futuras.
+
+La última ejecución documentada en este entorno fue `17 passed` el 22 de noviembre de 2026. El total puede cambiar al agregarse pruebas.
+
+## Límites
+
+Esta suite es de backend y no prueba visualmente la SPA. Al usar SQLite en memoria, tampoco verifica compatibilidad del esquema MySQL/MariaDB ni sustituye una prueba manual de integración con ese motor. Las pruebas no cubren todos los endpoints ni garantizan que las rutas CRUD tengan autorización completa; revisar [CONTRATO_API.md](./CONTRATO_API.md).

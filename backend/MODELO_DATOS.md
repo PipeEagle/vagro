@@ -1,88 +1,42 @@
-# Modelo de Datos - AgroGestion (v1.0)
+# Modelo de datos AgroGestion
 
-Diseño lógico y físico de la base de datos MySQL para el backend de AgroGestion.
-Solo incluye las tablas existentes en el entorno local (XAMPP, puerto 3306, BD `agrogestion`).
+Este documento describe los modelos ORM que usa actualmente la aplicación. No sustituye una inspección del esquema instalado en MySQL: el esquema SQL y los modelos no están completamente alineados.
 
-## Tablas existentes
+## Entidades ORM
 
-### 1. usuarios
+| Entidad / tabla | Campos principales | Relaciones declaradas en ORM |
+|---|---|---|
+| `Usuario` / `usuarios` | `username` único, `password_hash`, `nombre_completo`, `rol`, `finca_id` opcional, `is_active`, `created_at`, `updated_at` | `finca_id` referencia `fincas.id` |
+| `Finca` / `fincas` | `nombre`, `municipio`, `departamento`, `estado`, `creado_en`, `actualizado_en` | Relacionada mediante `backref` con lotes y labores |
+| `Cultivo` / `cultivos` | `nombre` único, `descripcion`, `ciclo_estimado_dias`, `creado_en`, `actualizado_en` | Un cultivo puede tener lotes |
+| `Lote` / `lotes` | `finca_id`, `cultivo_id`, `codigo_qr` único, `nombre`, `hectareas`, `estado`, `fecha_siembra`, `estado_fenologico`, `arboles`, `ubicacion_gps`, timestamps | FKs a `fincas.id` y `cultivos.id` |
+| `Labor` / `labores` | `finca_id`, `lote_id`, `tipo`, `fecha`, `estado`, `insumo`, `dosis`, `observaciones`, timestamps | FKs a `fincas.id` y `lotes.id` |
+| `Cosecha` / `cosechas` | `finca_id`, `lote_codigo_qr`, `fecha`, `cantidad`, `unidad`, `calidad`, `estado`, timestamps | No declara FKs en el modelo actual |
+| `Insumo` / `insumos` | `finca_id`, `nombre`, `tipo`, `ingrediente`, `carencia`, `cantidad`, `unidad`, timestamps | No declara FKs en el modelo actual |
+| `Evento` / `eventos` | `finca_id`, `fecha`, `titulo`, `tipo`, `estado`, timestamps | No declara FKs en el modelo actual |
 
-| Campo | Tipo | Restricción | Descripción |
-|-------|------|-------------|-------------|
-| id | INT | PK, AUTO_INCREMENT | Identificador primario |
-| username | VARCHAR(50) | NOT NULL, UNIQUE | Nombre de usuario para login |
-| password_hash | VARCHAR(255) | NOT NULL | Hash BCrypt de la contraseña |
-| nombre_completo | VARCHAR(100) | NOT NULL | Nombre completo del administrador |
-| rol | ENUM('ADMIN','SUPERADMIN') | NOT NULL, DEFAULT 'ADMIN' | Rol del usuario |
-| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | Cuenta activa o desactivada |
-| created_at | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Fecha de creación |
-| updated_at | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE | Última actualización |
+Roles contemplados por la autenticación y la interfaz: `ADMIN`, `SUPERADMIN` y `MAYORDOMO`. Los estados de lotes son `ACTIVO`, `EN_DESCANSO` y `FINALIZADO`.
 
-### 2. cultivos
+## Relaciones principales
 
-| Campo | Tipo | Restricción | Descripción |
-|-------|------|-------------|-------------|
-| id | INT | PK, AUTO_INCREMENT | Identificador primario |
-| nombre | VARCHAR(50) | NOT NULL, UNIQUE | Nombre del cultivo (Café, Plátano) |
-| descripcion | TEXT | NULLABLE | Descripción del cultivo |
-| ciclo_estimado_dias | INT | NULLABLE | Ciclo estimado en días |
-| created_at | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Fecha de creación |
-
-### 3. lotes
-
-| Campo | Tipo | Restricción | Descripción |
-|-------|------|-------------|-------------|
-| id | INT | PK, AUTO_INCREMENT | Identificador primario |
-| codigo_qr | VARCHAR(100) | NOT NULL, UNIQUE | Código QR físico del lote |
-| nombre | VARCHAR(100) | NOT NULL | Nombre del lote |
-| cultivo_id | INT | NOT NULL, FK → cultivos.id | Cultivo asociado |
-| hectareas | DECIMAL(5,2) | NOT NULL | Área en hectáreas |
-| estado | ENUM('ACTIVO','EN_DESCANSO','FINALIZADO') | NOT NULL, DEFAULT 'ACTIVO' | Estado del lote |
-| ubicacion_gps | VARCHAR(100) | NULLABLE | Ubicación GPS opcional |
-| created_at | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Fecha de creación |
-| updated_at | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE | Última actualización |
-
-### 4. labores
-
-| Campo | Tipo | Restricción | Descripción |
-|-------|------|-------------|-------------|
-| id | INT | PK, AUTO_INCREMENT | Identificador primario |
-| lote_id | INT | FK → lotes.id | Lote asociado |
-| tipo | VARCHAR(50) | NULLABLE | Tipo de labor (fumigación, riego, siembra, cosecha, fertilización, otro) |
-| descripcion | TEXT | NULLABLE | Descripción de la labor |
-| fecha | DATE | NULLABLE | Fecha de la labor |
-| estado | ENUM('pendiente','verificada','rechazada') | NULLABLE | Estado de verificación |
-| creado_por | INT | FK → usuarios.id | Usuario que creó la labor |
-| verificado_por | INT | FK → usuarios.id | Usuario que verificó la labor |
-| fecha_verificacion | DATETIME | NULLABLE | Fecha de verificación |
-| notas | TEXT | NULLABLE | Notas adicionales |
-
-## Relaciones
-
-```
-cultivos 1:N lotes          (un cultivo tiene muchos lotes)
-lotes   1:N labores         (un lote tiene muchas labores)
-usuarios 1:N labores (creado_por)  (un usuario crea muchas labores)
-usuarios 1:N labores (verificado_por)  (un usuario verifica muchas labores)
+```text
+Finca 1:N Usuario (asignación opcional)
+Finca 1:N Lote
+Finca 1:N Labor
+Cultivo 1:N Lote
+Lote 1:N Labor
 ```
 
-## Entidades ORM (implementadas)
+`Cosecha`, `Insumo` y `Evento` incluyen un `finca_id` de dominio, pero sus modelos no declaran una relación ORM/FK. No asumir integridad referencial en esas asociaciones.
 
-- `Usuario` — mapeado a `usuarios`, implementa `UserMixin` de Flask-Login (`get_id()`, `is_active`)
-- `Cultivo` — mapeado a `cultivos`, relación `lotes` (back_populates)
-- `Lote` — mapeado a `lotes`, relación `cultivo` (back_populates), relación implícita con `labores`
+## Diferencias conocidas con el SQL de inicialización
 
-## Restricciones y reglas
+`database/init.sql` no debe tratarse como representación exacta de los modelos actuales ni ejecutarse sin revisión. Entre otras diferencias, el SQL de usuarios define columnas de estado y fechas distintas a `Usuario`, su enum de rol incluye `MAYORDOMO` mientras que el enum ORM actual no lo incluye, y las claves de finca de lotes/labores no corresponden a las FKs que declaran los modelos. El orden de creación también debe revisarse.
 
-- `codigo_qr` es único y no nulo — usado para consulta pública sin autenticación
-- `estado` solo permite `ACTIVO`, `EN_DESCANSO`, `FINALIZADO`
-- Solo lotes con `estado = ACTIVO` son retornados por la consulta pública QR
-- `rol` solo permite `ADMIN` o `SUPERADMIN`
-- No almacenar contraseñas en texto plano — siempre hash BCrypt
-- No crear tablas adicionales en v1.0 (no tabla de sesiones, no tabla de municipios, no tabla de fotografías)
+Antes de crear una base desde cero o actualizar una base existente:
 
-## Migración
+1. Compara los modelos en `backend/app/modules/*/entities/models.py` con el esquema MySQL real.
+2. Corrige y revisa el DDL con una copia de seguridad; no apliques cambios destructivos sobre datos reales.
+3. Prueba la aplicación y sus relaciones en una base aislada.
 
-Las tablas ya existen en la base de datos local MySQL/MariaDB de XAMPP.
-El backend usa SQLAlchemy con PyMySQL, no ejecuta migraciones automáticas ni crea tablas.
-Cualquier cambio de esquema requiere script SQL manual y revisión de impacto.
+La aplicación no crea tablas ni sincroniza el esquema al arrancar. La suite automatizada usa SQLite en memoria; no demuestra que el esquema MySQL esté sincronizado.

@@ -1,7 +1,7 @@
 """Application factory for Agrogestion."""
 
 import os
-from flask import Flask, Response, jsonify, render_template, request, send_from_directory
+from flask import Flask, Response, jsonify, redirect, request, send_from_directory, url_for
 from werkzeug.exceptions import HTTPException, NotFound
 
 from app.config import Config
@@ -34,8 +34,8 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     """Create and configure a Flask application instance."""
     app = Flask(
         __name__,
-        template_folder="../../frontend/templates",
-        static_folder="../../frontend/static",
+        template_folder=None,
+        static_folder=None,
     )
     app.config.from_object(config_class)
     db.init_app(app)

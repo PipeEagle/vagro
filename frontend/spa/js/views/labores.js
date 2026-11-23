@@ -11,12 +11,13 @@ export const LaboresView = (container) => {
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
     const labores = store.getState().labores || [];
+    const fincaActiva = store.getEffectiveFincaId();
 
     let laboresFiltradas = labores;
     if (user?.rol === "MAYORDOMO" && user.finca_id) {
-      laboresFiltradas = labores.filter((l) => l.finca_id === user.finca_id);
-    } else if (fincaSeleccionada) {
-      laboresFiltradas = labores.filter((l) => l.finca_id === fincaSeleccionada);
+      laboresFiltradas = labores.filter((l) => Number(l.finca_id) === Number(user.finca_id));
+    } else if (fincaActiva) {
+      laboresFiltradas = labores.filter((l) => Number(l.finca_id) === Number(fincaActiva));
     }
 
     const puedeEditar =

@@ -11,7 +11,6 @@ from flask import (
     current_app,
     jsonify,
     redirect,
-    render_template,
     request,
 )
 from flask_login import current_user, login_required, login_user, logout_user
@@ -51,11 +50,11 @@ def spa_login_redirect() -> Response:
 
 @auth_pages_bp.get("/admin/dashboard")
 @login_required
-def admin_dashboard() -> str:
-    """Render the administrator dashboard for authenticated administrators."""
+def admin_dashboard() -> Response:
+    """Redirect authenticated administrators to the SPA dashboard."""
     if current_user.rol not in {"ADMIN", "SUPERADMIN"}:
         abort(403)
-    return render_template("admin/dashboard.html")
+    return redirect("/dashboard")
 
 
 @auth_bp.post("/login")
@@ -106,6 +105,7 @@ def me() -> tuple[Response, int] | Response:
                 "username": current_user.username,
                 "nombre_completo": current_user.nombre_completo,
                 "rol": current_user.rol,
+                "finca_id": current_user.finca_id,
             }
         }
     )

@@ -21,8 +21,9 @@ export const DashboardView = (container) => {
   }
 
   const datosFiltradosPorFinca = (arr) => {
-    if (esMayordomo && user?.finca_id) return arr.filter((d) => d.finca_id === user.finca_id);
-    if (fincaSeleccionada) return arr.filter((d) => d.finca_id === fincaSeleccionada);
+    const fincaActiva = store.getEffectiveFincaId();
+    if (esMayordomo && user?.finca_id) return arr.filter((d) => Number(d.finca_id) === Number(user.finca_id));
+    if (fincaActiva) return arr.filter((d) => Number(d.finca_id) === Number(fincaActiva));
     return arr;
   };
 
@@ -69,22 +70,22 @@ export const DashboardView = (container) => {
     const resumenHTML = hayFincaParaMostrar ? `
       <div class="row g-4 mb-4">
         <div class="col-md-3">
-          ${KpiCard({ label: "Hectareas activas", value: totalHectareas.toFixed(1) + " ha", icon: "hs", color: "success" })}
+          ${KpiCard({ label: "Hectareas activas", value: totalHectareas.toFixed(1) + " ha" })}
         </div>
         <div class="col-md-3">
-          ${KpiCard({ label: "Labores pendientes", value: laboresPendientes, icon: "task", color: "warning" })}
+          ${KpiCard({ label: "Labores pendientes", value: laboresPendientes })}
         </div>
         <div class="col-md-3">
-          ${KpiCard({ label: "Lotes en produccion", value: lotesProduccion, icon: "plot", color: "info" })}
+          ${KpiCard({ label: "Lotes en produccion", value: lotesProduccion })}
         </div>
         <div class="col-md-3">
-          ${KpiCard({ label: "Produccion mes", value: produccionMes.toLocaleString() + " @", icon: "harvest", color: "danger" })}
+          ${KpiCard({ label: "Produccion mes", value: produccionMes.toLocaleString() })}
         </div>
         <div class="col-md-3">
-          ${KpiCard({ label: "Total lotes", value: lotesFinca.length, icon: "farm", color: "primary" })}
+          ${KpiCard({ label: "Total lotes", value: lotesFinca.length })}
         </div>
         <div class="col-md-3">
-          ${KpiCard({ label: "Eventos proximos", value: eventosProximos, icon: "calendar", color: "info" })}
+          ${KpiCard({ label: "Eventos proximos", value: eventosProximos })}
         </div>
       </div>
 

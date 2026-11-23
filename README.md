@@ -1,30 +1,28 @@
 # 🌱 AgroGestión
 
-**AgroGestión** es una plataforma web diseñada para la gestión, registro y trazabilidad de labores agrícolas, enfocada específicamente en cultivos de café y plátano. Permite el control en tiempo real de las actividades en campo mediante un sistema de escaneo de códigos QR, asegurando la transparencia y eficiencia entre los trabajadores de campo y la administración.
+**AgroGestión** es una aplicación web para administrar fincas y dar seguimiento a sus lotes, cultivos, labores y cosechas de café y plátano. La interfaz actual es una SPA conectada a una API Flask y a una base de datos MySQL/MariaDB.
 
 ## 🚀 Características Principales
 
-### Flujo del Trabajador de Campo (Acceso Público)
-- Escaneo de código QR físico ubicado en el lote.
-- Visualización del estado actual del cultivo y lote.
-- Registro rápido de labores (fumigación, fertilización, cosecha, etc.) sin necesidad de credenciales.
+### Consulta pública
+- Consulta de lotes activos por código QR, sin iniciar sesión.
+- Visualización de información del lote y del cultivo asociado.
 
-### Flujo del Administrador (Acceso Privado)
-- Dashboard con notificaciones de registros pendientes.
-- Verificación presencial de las labores reportadas.
-- Confirmación o rechazo de tareas en el panel de administración.
-- Actualización automática de ciclos del cultivo y generación de reportes de trazabilidad.
+### Interfaz de gestión
+- Inicio de sesión y vistas de dashboard, lotes, cultivos, labores, cosechas, insumos, fincas y usuarios.
+- Operaciones de gestión desde la SPA, con filtros por finca y vistas de detalle.
+- El alta de usuario no asigna finca; la asignación se realiza posteriormente.
 
 ## 🛠️ Stack Tecnológico
 
 - **Frontend:** HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.
 - **Backend:** Python 3.10+, Flask.
-- **Base de Datos:** MySQL 8.0.
+- **Base de Datos:** MySQL/MariaDB para desarrollo; SQLite en la suite de pruebas.
 - **Arquitectura:** Monolito Modular por Capas (Controllers, Services, Repositories, Entities, DTOs).
 
 ## 🏗️ Arquitectura de Software
 
-El proyecto sigue un patrón de **Monolito Modular**. Cada dominio de negocio (Lotes, Labores, Cultivos, Usuarios) está aislado en su propio módulo dentro de `backend/app/modules/`, respetando la separación de responsabilidades:
+El proyecto sigue un patrón de **Monolito Modular**. Los dominios `usuarios`, `fincas`, `cultivos`, `lotes`, `labores`, `cosechas`, `insumos` y `eventos` están organizados en `backend/app/modules/`, con separación por capas:
 
 1. **Controllers:** Manejo de rutas HTTP y peticiones (Blueprints de Flask).
 2. **Services:** Lógica de negocio, validaciones y orquestación.
@@ -49,27 +47,25 @@ cd agrogestion
 
 ### 2. Instalar y ejecutar el backend
 
-Desde la raíz del proyecto, ejecuta en PowerShell:
+En PowerShell, desde la raíz de `agrogestion`, ejecuta:
 
 ```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python run.py
+.\iniciar.ps1
 ```
 
-Abre `http://127.0.0.1:5000` en el navegador. La pantalla de acceso es visual; la autenticación se ofrece por API. Consulta [backend/README.md](./backend/README.md) para probar el inicio de sesión y la consulta pública de lotes.
+El script crea el entorno virtual si hace falta, instala las dependencias e inicia Flask. Abre `http://127.0.0.1:5000`. También puedes iniciar manualmente desde `backend` con `.\.venv\Scripts\Activate.ps1` y `python run.py`. Consulta [arranque.txt](./arranque.txt) y [backend/README.md](./backend/README.md) para los requisitos de base de datos y el usuario inicial.
 
 ### 3. Configurar la base de datos con XAMPP
 
-El backend se conecta a MySQL/MariaDB de XAMPP mediante SQLAlchemy y PyMySQL. Inicia MySQL desde el panel de XAMPP y confirma en phpMyAdmin el nombre de la base, puerto y credenciales. Si `backend/.env` todavía no existe, créalo a partir del ejemplo:
+El backend se conecta a MySQL/MariaDB mediante SQLAlchemy y PyMySQL. Inicia MySQL desde XAMPP y configura `backend/.env` con el nombre de la base, puerto y credenciales. Si el archivo todavía no existe, créalo a partir del ejemplo sin sobrescribir un `.env` existente:
 
 ```powershell
 if (-not (Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
 ```
 
-Edita `backend/.env` con los valores reales. En una instalación local típica de XAMPP, el host es `127.0.0.1`, el puerto `3306`, el usuario `root` y la contraseña puede estar vacía. La base indicada por `DB_NAME` debe existir.
+Edita `backend/.env` con los valores reales. En una instalación local típica de XAMPP, el host es `127.0.0.1`, el puerto `3306`, el usuario `root` y la contraseña puede estar vacía. La base y las tablas indicadas por `DB_NAME` deben existir y ser compatibles con los modelos actuales.
+
+El arranque no crea tablas ni ejecuta migraciones. Los scripts SQL del repositorio deben revisarse y compararse con los modelos antes de aplicarlos; respalda cualquier base que contenga datos.
 
 Para comprobar la conexión, abre una terminal en `backend`, activa el entorno virtual e inicia la consola de Flask:
 
@@ -86,13 +82,17 @@ from app.extensions import db
 db.session.execute(text("SELECT 1")).scalar_one()
 ```
 
-El resultado esperado es `1`. Esto comprueba la conectividad, pero no crea ni modifica tablas. Los modelos de usuarios, cultivos y lotes corresponden al esquema compartido; el módulo de labores aún no está implementado. No compartas ni subas `backend/.env`; Git lo ignora.
+El resultado esperado es `1`. Esto comprueba la conectividad, pero no crea ni modifica tablas. No compartas ni subas `backend/.env`; Git lo ignora.
 
 ### 4. Configurar Frontend
 
-El frontend usa plantillas Jinja y archivos estáticos servidos por Flask. Para desarrollo local, ejecuta `python run.py` desde `backend` y abre `http://127.0.0.1:5000` en el navegador. Flask renderiza las plantillas de `frontend/templates/` y sirve los recursos de `frontend/static/`.
+El frontend es una SPA ubicada en `frontend/spa/`, servida por Flask. No usa las antiguas carpetas `frontend/static` ni `frontend/templates`.
 
-Live Server puede servir archivos estáticos aislados, pero no interpreta Jinja ni conecta las páginas con las rutas de Flask; por eso no se recomienda para ejecutar la aplicación completa. En producción, despliega Flask detrás de un servidor WSGI y, si se requiere, Nginx o Apache como proxy inverso.
+Live Server puede mostrar los archivos de la SPA, pero no conecta la interfaz con la API de Flask; por eso no se recomienda para ejecutar la aplicación completa. En producción, despliega Flask detrás de un servidor WSGI y, si se requiere, Nginx o Apache como proxy inverso.
+
+### Pruebas y límite de seguridad
+
+Desde `backend`, ejecuta la suite aislada en SQLite con `.\.venv\Scripts\python.exe -m pytest -q`. Las operaciones de usuarios requieren sesión y rol administrador; la protección de los demás endpoints CRUD no es uniforme en el estado actual. No expongas el servidor a Internet ni uses datos reales hasta revisar y aplicar autorización en todas las rutas que la requieran.
 
 ## 📁 Estructura del Proyecto
 
@@ -102,9 +102,14 @@ agrogestion/
 │   ├── app/
 │   │   ├── modules/
 │   │   │   ├── cultivos/
+│   │   │   ├── cosechas/
+│   │   │   ├── eventos/
+│   │   │   ├── fincas/
+│   │   │   ├── insumos/
 │   │   │   ├── labores/
 │   │   │   ├── lotes/
 │   │   │   └── usuarios/
+│   │   └── shared/
 │   │   ├── config.py
 │   │   └── extensions.py
 │   ├── .env.example
@@ -113,12 +118,10 @@ agrogestion/
 ├── database/
 │   └── init.sql
 ├── frontend/
-│   ├── static/
-│   │   ├── css/
-│   │   └── js/
-│   └── templates/
-│       ├── admin/
-│       ├── worker/
-│       └── base.html
+│   └── spa/
+│       ├── css/
+│       └── js/
+├── iniciar.ps1
+├── arranque.txt
 └── README.md
 ```

@@ -20,6 +20,7 @@ export const CalendarioView = (container) => {
   const render = () => {
     const hoy = getLocalDateString();
     const { fincaSeleccionada, user, labores } = store.getState();
+    const fincaActiva = store.getEffectiveFincaId();
 
     /* Primer y ultimo dia del mes seleccionado */
     const primerDiaMes = new Date(anioSeleccionado, mesSeleccionado, 1);
@@ -32,9 +33,9 @@ export const CalendarioView = (container) => {
     /* Filtrar labores por finca y por mes seleccionado */
     let laboresFiltradas = labores;
     if (user?.rol === "MAYORDOMO") {
-      laboresFiltradas = labores.filter((l) => l.finca_id === user.finca_id);
-    } else if (fincaSeleccionada) {
-      laboresFiltradas = labores.filter((l) => l.finca_id === fincaSeleccionada);
+      laboresFiltradas = labores.filter((l) => Number(l.finca_id) === Number(user.finca_id));
+    } else if (fincaActiva) {
+      laboresFiltradas = labores.filter((l) => Number(l.finca_id) === Number(fincaActiva));
     }
 
     const laboresMes = laboresFiltradas.filter((l) => {

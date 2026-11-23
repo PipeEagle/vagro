@@ -80,6 +80,65 @@ def test_admin_login_can_list_users(app, client):
     assert users_response.json[0]["finca_id"] is None
 
 
+def test_legacy_admin_dashboard_redirects_to_spa(app, client):
+    """Keep the legacy dashboard URL working without Jinja templates."""
+    with app.app_context():
+        db.session.add(
+            Usuario(
+                username="admin-dashboard",
+                password_hash=bcrypt.generate_password_hash("test-password").decode("utf-8"),
+                nombre_completo="Test Admin",
+                rol="SUPERADMIN",
+                is_active=True,
+            )
+        )
+        db.session.commit()
+
+    client.post(
+        "/api/auth/login",
+        json={"username": "admin-dashboard", "password": "test-password"},
+    )
+    response = client.get("/admin/dashboard")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/dashboard")
+
+
+def test_mayordomo_session_me_keeps_assigned_farm(app, client):
+    """Restore the mayordomo's farm assignment when the SPA reloads."""
+    with app.app_context():
+        finca = Finca(
+            nombre="Finca del mayordomo",
+            municipio="Prueba",
+            departamento="Prueba",
+        )
+        db.session.add(finca)
+        db.session.flush()
+        mayordomo = Usuario(
+            username="mayordomo",
+            password_hash=bcrypt.generate_password_hash("test-password").decode("utf-8"),
+            nombre_completo="Mayordomo de prueba",
+            rol="MAYORDOMO",
+            finca_id=finca.id,
+            is_active=True,
+        )
+        db.session.add(mayordomo)
+        db.session.commit()
+        finca_id = finca.id
+
+    login_response = client.post(
+        "/api/auth/login",
+        json={"username": "mayordomo", "password": "test-password"},
+    )
+    me_response = client.get("/api/auth/me")
+
+    assert login_response.status_code == 200
+    assert login_response.json["user"]["finca_id"] == finca_id
+    assert me_response.status_code == 200
+    assert me_response.json["user"]["rol"] == "MAYORDOMO"
+    assert me_response.json["user"]["finca_id"] == finca_id
+
+
 def test_create_labor_requires_a_matching_existing_plot(app, client):
     """Persist labor against an existing plot in the selected farm."""
     with app.app_context():

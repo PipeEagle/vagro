@@ -18,7 +18,7 @@ Write-Host "Instalando dependencias..." -ForegroundColor Yellow
 & "$venv\Scripts\python.exe" -m pip install -r "$backendDir\requirements.txt"
 
 # 3. Activar entorno virtual y ejecutar Flask
-Write-Host "Activando entorno virtual e iniciando Flask..." -ForegroundColor Green
+Write-Host "Iniciando Flask con el entorno virtual..." -ForegroundColor Green
 Write-Host "El servidor estara disponible en: http://127.0.0.1:5000" -ForegroundColor Green
 Write-Host "Presiona Ctrl+C para detener." -ForegroundColor Gray
 Write-Host ""

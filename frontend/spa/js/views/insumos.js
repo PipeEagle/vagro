@@ -10,12 +10,13 @@ export const InsumosView = (container) => {
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
     const insumos = store.getState().insumos || [];
+    const fincaActiva = store.getEffectiveFincaId();
 
     let insumosFiltrados = insumos;
     if (user?.rol === "MAYORDOMO" && user.finca_id) {
-      insumosFiltrados = insumos.filter((i) => i.finca_id === user.finca_id);
-    } else if (fincaSeleccionada) {
-      insumosFiltrados = insumos.filter((i) => i.finca_id === fincaSeleccionada);
+      insumosFiltrados = insumos.filter((i) => Number(i.finca_id) === Number(user.finca_id));
+    } else if (fincaActiva) {
+      insumosFiltrados = insumos.filter((i) => Number(i.finca_id) === Number(fincaActiva));
     }
 
     const puedeEditar =

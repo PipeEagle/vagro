@@ -81,7 +81,6 @@ export const UsuariosView = (container) => {
   };
 
   const abrirModalNuevo = async () => {
-    const fincas = store.getState().fincas || [];
     Modal({
       id: "modalNuevoUsuario",
       title: "Nuevo usuario",
@@ -107,12 +106,6 @@ export const UsuariosView = (container) => {
               <option value="MAYORDOMO">Mayordomo</option>
             </select>
           </div>
-          <div class="mb-3" id="fincaSelectGroup" style="display:none;">
-            <label class="form-label">Finca asignada</label>
-            <select class="form-select" name="finca_id">
-              ${fincas.map((f) => `<option value="${f.id}">${f.nombre}</option>`).join("")}
-            </select>
-          </div>
         </form>
       `,
       onConfirm: async () => {
@@ -121,7 +114,6 @@ export const UsuariosView = (container) => {
         if (!validateRequired(fd, ["nombre_completo", "username", "email", "rol"])) return false;
 
         const rol = fd.get("rol");
-        const fincaId = rol === "MAYORDOMO" ? parseInt(fd.get("finca_id")) || null : null;
 
         try {
           const nuevo = await apiClient.post("/api/usuarios", {
@@ -129,7 +121,7 @@ export const UsuariosView = (container) => {
             password: fd.get("username") + "123!",
             nombre_completo: fd.get("nombre_completo"),
             rol: rol,
-            finca_id: fincaId,
+            finca_id: null,
             estado: "Activo",
           });
 
@@ -146,14 +138,6 @@ export const UsuariosView = (container) => {
       },
       confirmLabel: "Crear",
     });
-
-    const rolSelect = document.getElementById("rolSelect");
-    const fincaGroup = document.getElementById("fincaSelectGroup");
-    if (rolSelect && fincaGroup) {
-      rolSelect.addEventListener("change", () => {
-        fincaGroup.style.display = rolSelect.value === "MAYORDOMO" ? "block" : "none";
-      });
-    }
   };
 
   render();

@@ -1,28 +1,44 @@
-AGROGESTION - INSTRUCCIONES DE ARRANQUE
+AGROGESTION - INSTRUCCIONES DE ARRANQUE (WINDOWS)
 
-1. Abre el panel de XAMPP e inicia MySQL.
+REQUISITOS
+- Python instalado.
+- MySQL/MariaDB iniciado (por ejemplo, desde el panel de XAMPP).
+- Una base `agrogestion` con un esquema compatible con los modelos actuales.
+- `backend/.env` configurado con los datos de conexion. Si no existe, copia
+  `backend/.env.example` y edita los valores antes de iniciar la aplicacion.
 
-2. Abre PowerShell y ejecuta:
+El servidor no crea las tablas ni aplica migraciones al arrancar. La base de
+datos y su esquema deben estar preparados previamente. No ejecutes scripts SQL
+contra una base con datos sin revisarlos y tener una copia de seguridad.
+`database/init.sql` tiene diferencias conocidas con los modelos ORM; consulta
+`backend/MODELO_DATOS.md` antes de usarlo.
 
-   cd C:\Users\pipeg\Desktop\VAGRO\agrogestion\backend
-   .\.venv\Scripts\Activate.ps1
-   python run.py
+INICIAR DESDE POWERSHELL
 
-3. Deja abierta esa terminal mientras uses la aplicacion.
+Si la terminal esta en `C:\Users\pipeg\Desktop\VAGRO`:
 
-4. Abre en el navegador:
+   .\agrogestion\iniciar.ps1
+
+Si la terminal ya esta en `C:\Users\pipeg\Desktop\VAGRO\agrogestion`:
+
+   .\iniciar.ps1
+
+El script crea `backend/.venv` si hace falta, instala las dependencias e inicia
+Flask. Mantén abierta la terminal mientras uses la aplicacion. El servidor
+estara disponible en:
 
    http://127.0.0.1:5000
 
-Datos de acceso:
-   Usuario: admin
-   Contrasena: Admin123!
+El script de arranque no crea la base de datos ni las tablas. Para crear el
+usuario administrador inicial, con el esquema ya preparado y la conexion
+configurada, ejecuta desde la carpeta `agrogestion`:
 
-Para detener el servidor:
-   Pulsa Ctrl+C en la terminal donde esta ejecutandose Flask.
+   cd .\backend
+   .\.venv\Scripts\python.exe .\scripts\crear_admin.py
 
-Para salir del entorno virtual:
-   Escribe deactivate en PowerShell.
+Ese script crea `admin` con la contrasena inicial `Admin123!` solo si el usuario
+no existe. Si `admin` ya existe, no cambia su contrasena; usa las credenciales
+vigentes de la base de datos. Cambia cualquier contrasena de ejemplo antes de
+usar datos reales.
 
-Nota: estas credenciales son para desarrollo local. Cambia la contrasena
-antes de utilizar la aplicacion con datos reales o en un entorno publico.
+Para detener el servidor, pulsa Ctrl+C en la terminal de Flask.

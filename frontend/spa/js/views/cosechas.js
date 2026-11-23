@@ -12,12 +12,13 @@ export const CosechasView = (container) => {
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
     const cosechas = store.getState().cosechas || [];
+    const fincaActiva = store.getEffectiveFincaId();
 
     let cosechasFiltradas = cosechas;
     if (user?.rol === "MAYORDOMO" && user.finca_id) {
-      cosechasFiltradas = cosechas.filter((c) => c.finca_id === user.finca_id);
-    } else if (fincaSeleccionada) {
-      cosechasFiltradas = cosechas.filter((c) => c.finca_id === fincaSeleccionada);
+      cosechasFiltradas = cosechas.filter((c) => Number(c.finca_id) === Number(user.finca_id));
+    } else if (fincaActiva) {
+      cosechasFiltradas = cosechas.filter((c) => Number(c.finca_id) === Number(fincaActiva));
     }
     // Si no hay finca seleccionada y no es mayordomo, muestra TODAS las cosechas
 

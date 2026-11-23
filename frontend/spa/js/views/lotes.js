@@ -11,12 +11,13 @@ export const LotesView = (container) => {
   const render = () => {
     const { fincaSeleccionada, user } = store.getState();
     const lotes = store.getState().lotes || [];
+    const fincaActiva = store.getEffectiveFincaId();
 
     let lotesFiltrados = lotes;
     if (user?.rol === "MAYORDOMO" && user.finca_id) {
-      lotesFiltrados = lotes.filter((l) => l.finca_id === user.finca_id);
-    } else if (fincaSeleccionada) {
-      lotesFiltrados = lotes.filter((l) => l.finca_id === fincaSeleccionada);
+      lotesFiltrados = lotes.filter((l) => Number(l.finca_id) === Number(user.finca_id));
+    } else if (fincaActiva) {
+      lotesFiltrados = lotes.filter((l) => Number(l.finca_id) === Number(fincaActiva));
     }
 
     const puedeEditar =

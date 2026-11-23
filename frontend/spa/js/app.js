@@ -272,11 +272,20 @@ const initApp = async () => {
   try {
     const res = await apiClient.get("/api/auth/me");
     if (res && res.user) {
-      store.setState({ user: res.user, isAuthenticated: true });
       if (res.user.rol === "MAYORDOMO" && res.user.finca_id) {
-        store.setState({ fincaSeleccionada: res.user.finca_id });
+        store.setState({
+          user: res.user,
+          isAuthenticated: true,
+          fincaSeleccionada: res.user.finca_id,
+        });
       } else if (res.user.rol === "SUPERADMIN" || res.user.rol === "ADMIN") {
-        store.setState({ fincaSeleccionada: store.getDefaultFincaId() });
+        store.setState({
+          user: res.user,
+          isAuthenticated: true,
+          fincaSeleccionada: store.getDefaultFincaId(),
+        });
+      } else {
+        store.setState({ user: res.user, isAuthenticated: true });
       }
     }
   } catch (e) {

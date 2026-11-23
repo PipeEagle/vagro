@@ -203,6 +203,7 @@
       <li>Panel de administración autenticado con dashboard, gestión de lotes, labores, cultivos, insumos, fincas y usuarios.</li>
       <li>Sincronización de información en todos los apartados mediante un estado global centralizado.</li>
     </ul>
+    <p><strong>Estado implementado:</strong> la consulta pública por QR muestra información de lotes activos. El registro y gestión se realiza desde las vistas de la SPA; el escaneo público no registra labores. La aplicación también incluye cosechas, calendario y eventos.</p>
   </div>
 
   <h2 class="section-title">Fase 02. Descubrimiento, requisitos y contratación</h2>
@@ -250,7 +251,7 @@
       <tr><td>Frontend UI</td><td>Bootstrap 5.3.3</td><td>5.3.3</td><td>Estilos y componentes responsivos vía CDN</td></tr>
       <tr><td>Backend</td><td>Flask</td><td>3.x</td><td>Servidor web y API REST</td></tr>
       <tr><td>ORM</td><td>Flask-SQLAlchemy</td><td>3.x</td><td>Mapeo objeto-relacional sobre MySQL</td></tr>
-      <tr><td>Migraciones</td><td>Flask-Migrate</td><td>4.x</td><td>Control de versiones del esquema de base de datos</td></tr>
+      <tr><td>Migraciones</td><td>SQL manual revisado</td><td>Scripts versionados</td><td>Flask-Migrate está en requirements, pero no se inicializa en la aplicación</td></tr>
       <tr><td>Validación</td><td>Flask-Marshmallow</td><td>1.x</td><td>DTOs y serialización de entrada/salida</td></tr>
       <tr><td>Autenticación</td><td>Flask-Login + Flask-Bcrypt</td><td>0.6.x / 1.x</td><td>Sesiones y hash de contraseñas</td></tr>
       <tr><td>Base de datos</td><td>MySQL / MariaDB (XAMPP)</td><td>8.0 / 10.x</td><td>Persistencia de datos relacional</td></tr>
@@ -260,39 +261,32 @@
     <pre><code>agrogestion/
 ├── backend/
 │   ├── app/
-│   │   ├── config.py
-│   │   ├── extensions.py
-│   │   └── modules/
-│   │       ├── usuarios/   (auth: control, servicio, repositorio, DTO, entidad)
-│   │       ├── lotes/      (consulta pública QR: 5 capas)
-│   │       ├── cultivos/   (catálogo: 5 capas)
-│   │       └── labores/    (registro de labores: 5 capas)
-│   ├── run.py
-│   ├── requirements.txt
-│   └── tests/
-├── database/
-│   └── init.sql          (esquema SQL y seed data)
+│   │   ├── __init__.py, config.py, extensions.py
+│   │   ├── modules/
+│   │   │   ├── usuarios/ fincas/ cultivos/ lotes/
+│   │   │   ├── labores/ cosechas/ insumos/ eventos/
+│   │   └── shared/
+│   ├── scripts/ tests/ requirements.txt
+│   └── run.py
+├── database/ (scripts SQL y cambios puntuales)
 ├── frontend/
-│   ├── spa/
-│   │   ├── index.html
-│   │   ├── css/ (tokens, base, components)
-│   │   └── js/ (app, router, store, services, components, views)
-├── AGENTS.md
-└── iniciar.ps1</code></pre>
+│   └── spa/ (index.html, css/, js/)
+├── iniciar.ps1
+└── arranque.txt</code></pre>
   </div>
 
   <h2 class="section-title">Fase 05. Desarrollo incremental</h2>
   <div class="card">
     <h4>5.1 Módulo de usuarios (autenticación)</h4>
-    <p>Implementación completa de login/logout, protección de rutas por rol (SUPERADMIN, ADMIN, MAYORDOMO), y gestión de usuarios con asignación de finca. El controlador expone endpoints <code>POST /api/auth/login</code>, <code>POST /api/auth/logout</code> y <code>GET /api/auth/me</code>.</p>
+    <p>Implementación de login/logout con Flask-Login, consulta de sesión actual y CRUD de usuarios. La interfaz contempla los roles SUPERADMIN, ADMIN y MAYORDOMO. El formulario de alta crea el usuario sin finca asignada; la asociación puede hacerse posteriormente. El CRUD de usuarios exige sesión y rol administrador.</p>
     <h4>5.2 Módulo de lotes (consulta pública QR)</h4>
-    <p>Endpoint público <code>GET /api/lotes/qr/&lt;codigo_qr&gt;</code> que devuelve datos del lote (nombre, estado, cultivo, hectáreas) solo si el lote está ACTIVO. No requiere autenticación.</p>
+    <p>El endpoint público <code>GET /api/lotes/qr/&lt;codigo_qr&gt;</code> devuelve datos de un lote activo; también existe una ruta de imagen QR. El módulo incluye CRUD de lotes.</p>
     <h4>5.3 Módulo de cultivos (catálogo)</h4>
-    <p>API REST completa con operaciones CRUD sobre cultivos: listar, obtener por id, crear, actualizar y eliminar. Incluye validaciones de nombre único y campos obligatorios.</p>
+    <p>API REST y vista SPA para consultar y gestionar el catálogo de cultivos.</p>
     <h4>5.4 Módulo de labores</h4>
-    <p>API REST completa para registro, consulta, actualización y eliminación de labores agrícolas (siembra, fertilización, fumigación, poda, riego, cosecha) asociadas a fincas y lotes.</p>
-    <h4>5.4 Frontend SPA</h4>
-    <p>Aplicación de una sola página con enrutamiento del lado del cliente, gestión de estado centralizada (<code>store.js</code> con patrón observador), componentes reutilizables (Modal, StatusBadge, KpiCard, FincaSelector) y vistas para dashboard, lotes, labores, cultivos, insumos, fincas, usuarios y calendario. Todos los apartados están sincronizados mediante el store global.</p>
+    <p>API REST y vistas para consultar y gestionar labores asociadas a lotes y fincas. Las reglas incluyen validar la relación lote-finca y los estados de la labor.</p>
+    <h4>5.5 Otros módulos y frontend SPA</h4>
+    <p>También están implementados los dominios de fincas, cosechas, insumos y eventos, cada uno con operaciones de API y vistas SPA. El frontend usa enrutamiento del lado del cliente, un store centralizado (<code>store.js</code>) y componentes reutilizables. Sus vistas incluyen dashboard, lotes y detalles, labores y detalles, cultivos, cosechas y detalles, insumos y detalles, fincas y detalles, usuarios y detalles, calendario y perfil.</p>
   </div>
 
   <h2 class="section-title">Arquitectura computacional y diagrama de despliegue</h2>
@@ -302,7 +296,7 @@
 %%{init: {'theme': 'base'}}%%%
 graph LR
     subgraph Usuario["Usuario del sistema"]
-        T[Workinger de campo]
+        T[Trabajador de campo]
         A[Administrador]
     end
     subgraph Web["Navegador web"]
@@ -384,9 +378,13 @@ graph LR
     <table>
       <tr><th>Módulo</th><th>Dominio</th><th>Capas implementadas</th><th>Estado</th></tr>
       <tr><td><code>usuarios</code></td><td>Autenticación y gestión de usuarios</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
-      <tr><td><code>lotes</code></td><td>Consulta pública de lotes por QR</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>fincas</code></td><td>Administración de fincas</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
       <tr><td><code>cultivos</code></td><td>Catálogo de cultivos</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
-      <tr><td><code>labores</code></td><td>Registro de labores agrícolas</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>lotes</code></td><td>Gestión de lotes y consulta pública QR</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>labores</code></td><td>Gestión de labores agrícolas</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>cosechas</code></td><td>Registro de cosechas</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>insumos</code></td><td>Inventario de insumos</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
+      <tr><td><code>eventos</code></td><td>Eventos de finca y calendario</td><td>Controllers, Services, Repositories, DTOs, Entities</td><td><span class="badge badge-primary">Implementado</span></td></tr>
     </table>
     <h3>Responsabilidades por capa</h3>
     <table>
@@ -404,29 +402,33 @@ graph LR
     <h3>Diagrama Entidad-Relación (UML)</h3>
     <div class="mermaid">
 erDiagram
-    USUARIOS ||--o{ LOTES : "posee"
-    USUARIOS ||--o{ LABORES : "registra"
-    CULTIVOS ||--o{ LOTES : "tiene"
+    FINCAS ||--o{ USUARIOS : "asigna"
+    FINCAS ||--o{ LOTES : "contiene"
+    CULTIVOS ||--o{ LOTES : "clasifica"
+    FINCAS ||--o{ LABORES : "organiza"
     LOTES ||--o{ LABORES : "contiene"
 
+    FINCAS {
+        int id PK
+        string nombre
+        string municipio
+        string departamento
+        enum estado
+    }
     USUARIOS {
         int id PK
         string username UK
         string password_hash
         string nombre_completo
-        enum rol
+        string rol
         int finca_id FK
-        enum estado
-        datetime creado_en
-        datetime actualizado_en
+        boolean is_active
     }
     CULTIVOS {
         int id PK
         string nombre UK
         string descripcion
         int ciclo_estimado_dias
-        datetime creado_en
-        datetime actualizado_en
     }
     LOTES {
         int id PK
@@ -436,11 +438,6 @@ erDiagram
         string nombre
         decimal hectareas
         enum estado
-        date fecha_siembra
-        string estado_fenologico
-        int arboles
-        datetime creado_en
-        datetime actualizado_en
     }
     LABORES {
         int id PK
@@ -449,24 +446,39 @@ erDiagram
         enum tipo
         date fecha
         enum estado
-        string insumo
-        string dosis
-        text observaciones
-        datetime creado_en
-        datetime actualizado_en
+    }
+    COSECHAS {
+        int id PK
+        int finca_id
+        string lote_codigo_qr
+        date fecha
+        decimal cantidad
+        string unidad
+        string calidad
+        string estado
+    }
+    INSUMOS {
+        int id PK
+        int finca_id
+        string nombre
+        string tipo
+        decimal cantidad
+        string unidad
+    }
+    EVENTOS {
+        int id PK
+        int finca_id
+        date fecha
+        string titulo
+        string tipo
+        string estado
     }
     </div>
-    <p class="footer" style="margin-top:8px; font-size:0.8rem;">Modelo lógico/físico: usuarios poseen lotes, cultivos clasifican lotes, y lotes contienen labores.</p>
+    <p class="footer" style="margin-top:8px; font-size:0.8rem;">El diagrama resume los campos ORM. Las asociaciones de cosechas, insumos y eventos usan identificadores de finca, pero no declaran FKs en el ORM actual.</p>
   </div>
   <div class="card">
     <h3>Script de inicialización (database/init.sql)</h3>
-    <p>Se incluyó un script SQL completo que crea la base de datos <code>agrogestion</code>, las cuatro tablas con sus relaciones y restricciones de integridad, y datos iniciales (seed data) de cultivos, usuarios y lotes para pruebas.</p>
-    <pre><code>-- Resumen del esquema
-CREATE TABLE cultivos (...);
-CREATE TABLE usuarios (...);
-CREATE TABLE lotes (...);
-CREATE TABLE labores (...);
--- Datos iniciales: 2 cultivos, 5 usuarios, 7 lotes</code></pre>
+    <p><code>database/init.sql</code> contiene DDL y datos de ejemplo para varios dominios, pero no está alineado completamente con los modelos ORM (incluidos campos, roles y referencias de finca). La aplicación no lo ejecuta al arrancar. Debe revisarse y probarse en una base aislada antes de usarlo; no es una migración segura para una base con datos.</p>
   </div>
 
   <h2 class="section-title">Diseño de la API REST y comunicación entre componentes</h2>
@@ -477,16 +489,17 @@ CREATE TABLE labores (...);
       <tr><td>POST</td><td>/api/auth/login</td><td>Autenticación de usuario</td><td>No</td></tr>
       <tr><td>POST</td><td>/api/auth/logout</td><td>Cerrar sesión</td><td>Sí</td></tr>
       <tr><td>GET</td><td>/api/auth/me</td><td>Usuario autenticado actual</td><td>Sí</td></tr>
-      <tr><td>GET</td><td>/api/lotes/qr/&lt;codigo_qr&gt;</td><td>Consulta pública de lote por QR</td><td>No</td></tr>
-      <tr><td>GET/POST/PUT/DELETE</td><td>/api/cultivos</td><td>CRUD de cultivos</td><td>Sí (Admin)</td></tr>
-      <tr><td>GET/POST/PUT/DELETE</td><td>/api/labores</td><td>CRUD de labores</td><td>Sí</td></tr>
+      <tr><td>GET</td><td>/api/lotes/qr/&lt;codigo_qr&gt; y /image</td><td>Consulta de lote activo e imagen QR</td><td>No</td></tr>
+      <tr><td>CRUD</td><td>/api/usuarios y /&lt;id&gt;</td><td>Gestión de usuarios</td><td>Sí (ADMIN/SUPERADMIN)</td></tr>
+      <tr><td>CRUD</td><td>/api/fincas, /api/cultivos, /api/lotes</td><td>Gestión de fincas, cultivos y lotes</td><td>Sin protección uniforme en la API actual</td></tr>
+      <tr><td>CRUD</td><td>/api/labores, /api/cosechas, /api/insumos, /api/eventos</td><td>Gestión de operaciones agrícolas</td><td>Sin protección uniforme en la API actual</td></tr>
     </table>
     <h3>Comunicación entre componentes</h3>
     <ul>
-      <li><strong>Frontend → Backend:</strong> peticiones <code>fetch</code> asíncronas con JSON a través de <code>apiClient.js</code>.</li>
+      <li><strong>Frontend → Backend:</strong> peticiones <code>fetch</code> asíncronas con JSON a través del cliente de API en <code>frontend/spa/js/services/</code>.</li>
       <li><strong>Backend → Base de datos:</strong> consultas SQLAlchemy a través de repositorios.</li>
       <li><strong>Frontend interno:</strong> store global pub/sub que mantiene sincronizados dashboard, lotes, labores, cultivos, insumos, fincas y usuarios. Cualquier creación/edición/eliminación se refleja inmediatamente en todas las vistas.</li>
-      <li><strong>Errores:</strong> manejo centralizado con <code>AppException</code> que respuestas JSON con código HTTP y mensaje amigable.</li>
+      <li><strong>Errores:</strong> manejo de excepciones de aplicación mediante <code>AppException</code> y respuestas JSON con códigos HTTP.</li>
     </ul>
   </div>
 
@@ -494,9 +507,9 @@ CREATE TABLE labores (...);
   <div class="card">
     <ul>
       <li><strong>Autenticación:</strong> Flask-Login gestiona sesiones de usuario. Las contraseñas se almacenan hasheadas con Flask-Bcrypt (never plain text).</li>
-      <li><strong>Autorización por roles:</strong> decorador <code>admin_required</code> protege rutas para SUPERADMIN y ADMIN. Los MAYORDOMO solo ven su finca asignada.</li>
+      <li><strong>Autorización por roles:</strong> el CRUD de usuarios exige sesión y rol ADMIN/SUPERADMIN. La protección de los demás CRUD no es uniforme en el estado actual; los filtros de interfaz no sustituyen autorización del servidor.</li>
       <li><strong>Endpoints públicos:</strong> la consulta de lotes por QR no requiere autenticación y solo expone datos no sensibles (nombre, estado, cultivo, hectáreas).</li>
-      <li><strong>Validación de entrada:</strong> todos los payloads se validan con Marshmallow antes de llegar al servicio.</li>
+      <li><strong>Validación de entrada:</strong> los endpoints usan esquemas DTO y validaciones de dominio; la cobertura depende de cada operación.</li>
       <li><strong>Manejo de excepciones:</strong> <code>AppException</code> devuelve códigos HTTP apropiados (400, 401, 403, 404, 409, 500) sin exponer detalles internos del servidor.</li>
       <li><strong>Variables de entorno:</strong> SECRET_KEY y credenciales de BD en archivo <code>.env</code> (ignorado por Git, no se suben secretos).</li>
     </ul>
@@ -511,15 +524,15 @@ CREATE TABLE labores (...);
     <h3>ADR-02: SPA vanilla JavaScript sin frameworks de interfaz</h3>
     <p><strong>Decisión:</strong> Construir el frontend con HTML/CSS/JS puro y Bootstrap 5, sin React, Angular ni Vue.</p>
     <p><strong>Alternativas consideradas:</strong> React, Vue.js, Angular.</p>
-    <tr><td>Justificación:</strong> Requisito explícito de la asignatura. Además, reduce dependencias, tiempo de compilación y complejidad para un proyecto de este tamaño.</p>
+    <p><strong>Justificación:</strong> Requisito explícito de la asignatura. Además, reduce dependencias, tiempo de compilación y complejidad para un proyecto de este tamaño.</p>
     <h3>ADR-03: Estado global con store pub/sub</h3>
     <p><strong>Decisión:</strong> Implementar un store centralizado (patrón observador) en JavaScript para sincronizar datos entre todas las vistas del SPA.</p>
     <p><strong>Alternativas consideradas:</strong> estado local por vista, localStorage, Context API (React).</p>
     <p><strong>Justificación:</strong> Garantiza que la información se mantenga sincronizada en todos los apartados (dashboard, lotes, labores, cultivos, insumos, fincas, usuarios) sin recargas de página.</p>
-    <h3>ADR-04: Flask-Migrate para gestión de esquema</h3>
-    <p><strong>Decisión:</strong> Agregar Flask-Migrate/Alembic para control de versiones de la base de datos.</p>
+    <h3>ADR-04: Cambios SQL revisados y migraciones pendientes</h3>
+    <p><strong>Decisión:</strong> Mantener los cambios de esquema como SQL revisado hasta que se configure un flujo de migraciones completo.</p>
     <p><strong>Alternativas consideradas:</strong> scripts SQL manuales únicamente.</p>
-    <p><strong>Justificación:</strong> Requisito técnico del proyecto (gestión de migraciones de base de datos) y buena práctica para evolucionar el esquema de forma controlada.</p>
+    <p><strong>Estado:</strong> Flask-Migrate está declarado como dependencia, pero no se registra ni se inicializa. No hay comandos <code>flask db</code> operativos en la aplicación actual; consulta <code>backend/MIGRACIONES.md</code>.</p>
   </div>
 
   <h2 class="section-title">Consideraciones de calidad</h2>
@@ -528,8 +541,8 @@ CREATE TABLE labores (...);
       <h3>Rendimiento</h3>
       <ul>
         <li>Endpoints públicos (QR) optimizados para consultas simples sin autenticación.</li>
-        <li>Uso de índices en claves foráneas y campos de búsqueda (código QR, finca, lote, fecha).</li>
-        <li>Frontend sin build step: carga inmediata de assets estáticos.</li>
+        <li>Existen índices en algunos campos de consulta del DDL SQL, pero no hay una medición de rendimiento documentada.</li>
+        <li>Frontend sin build step; los recursos se sirven desde la SPA integrada en Flask.</li>
       </ul>
     </div>
     <div>
@@ -543,16 +556,16 @@ CREATE TABLE labores (...);
     <div>
       <h3>Disponibilidad</h3>
       <ul>
-        <li>Servidor Flask ligero apto para desarrollo y despliegue en pequeños servidores.</li>
-        <li>Manejo centralizado de errores evita fallos silenciosos.</li>
-        <li>Base de datos MySQL con motor InnoDB soporta transacciones y concurrencia.</li>
+        <li>Flask se ejecuta localmente mediante el servidor de desarrollo; no se ha documentado una prueba de disponibilidad en producción.</li>
+        <li>La aplicación centraliza algunas respuestas de error; el manejo se debe verificar por endpoint.</li>
+        <li>La compatibilidad del esquema instalado debe verificarse antes de conectar MySQL/MariaDB.</li>
       </ul>
     </div>
     <div>
       <h3>Seguridad</h3>
       <ul>
         <li>Contraseñas hasheadas con Bcrypt.</li>
-        <li>Control de acceso por roles y finca asignada.</li>
+        <li>El control de acceso de la API está incompleto fuera del CRUD de usuarios; revisar antes de cualquier despliegue público.</li>
         <li>Validación de entrada en cliente y servidor.</li>
         <li>No se exponen secretos ni credenciales en el código.</li>
       </ul>
@@ -569,11 +582,13 @@ CREATE TABLE labores (...);
 
   <h2 class="section-title">Pruebas de funcionamiento</h2>
   <div class="card">
-    <p>Se incluyó una estructura básica de pruebas con <code>pytest</code> en <code>backend/tests/</code> que verifica la creación de la aplicación Flask y la conectividad con la base de datos en memoria (SQLite para tests).</p>
-    <pre><code># Ejecutar pruebas
-cd backend
-.\.venv\Scripts\Activate.ps1
-pytest</code></pre>
+    <p>La suite actual usa SQLite en memoria y cubre la fábrica Flask, autenticación, validaciones y operaciones de lotes, labores, fincas, insumos y cosechas. El 22 de noviembre de 2026 la ejecución local registró 17 pruebas aprobadas; esto no verifica el esquema MySQL ni el comportamiento visual de la SPA.</p>
+    <pre><code># Iniciar desde PowerShell, en la raíz del proyecto
+.\iniciar.ps1
+
+# Ejecutar pruebas desde la raíz del proyecto
+.\backend\.venv\Scripts\python.exe -m pytest -q</code></pre>
+    <p>El servidor requiere una base MySQL/MariaDB ya configurada y un esquema compatible. El script de arranque instala dependencias, pero no crea tablas ni un usuario administrador.</p>
   </div>
 
   <div class="footer">

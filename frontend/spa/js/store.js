@@ -28,6 +28,13 @@ const store = (() => {
     return fincas.find((finca) => finca.estado === "ACTIVO")?.id ?? fincas[0]?.id ?? null;
   };
 
+  const getEffectiveFincaId = () => {
+    if (state.user?.rol === "MAYORDOMO" && state.user.finca_id) {
+      return state.user.finca_id;
+    }
+    return state.fincaSeleccionada;
+  };
+
   const setState = (partial) => {
     state = { ...state, ...partial };
     subscribers.forEach((fn) => fn(state));
@@ -53,6 +60,7 @@ const store = (() => {
   return {
     getState,
     getDefaultFincaId,
+    getEffectiveFincaId,
     setState,
     subscribe,
     notify,

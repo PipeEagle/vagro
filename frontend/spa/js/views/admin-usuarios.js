@@ -158,12 +158,6 @@ export const AdminUsuariosView = (container) => {
                   <option value="MAYORDOMO">Mayordomo</option>
                 </select>
               </div>
-              <div class="mb-3" id="fincaSelectGroup" style="display:none;">
-                <label class="form-label">Finca asignada</label>
-                <select class="form-select" name="finca_id" id="nuevoUsuarioFinca">
-                  ${getFincas().map((f) => `<option value="${f.id}">${f.nombre}</option>`).join("")}
-                </select>
-              </div>
               <div class="mb-3">
                 <label class="form-label">Contrasena</label>
                 <input type="password" class="form-control" name="password" required>
@@ -179,7 +173,7 @@ export const AdminUsuariosView = (container) => {
               nombre_completo: fd.get("nombre_completo"),
               rol: fd.get("rol"),
               estado: "Activo",
-              finca_id: fd.get("rol") === "MAYORDOMO" ? parseInt(fd.get("finca_id")) || null : null,
+              finca_id: null,
               password: fd.get("password"),
             };
             const currentUsuarios = getUsuarios();
@@ -192,14 +186,6 @@ export const AdminUsuariosView = (container) => {
           },
           confirmLabel: "Guardar",
         });
-
-        const rolSelect = document.getElementById("rolSelect");
-        const fincaGroup = document.getElementById("fincaSelectGroup");
-        if (rolSelect && fincaGroup) {
-          rolSelect.addEventListener("change", () => {
-            fincaGroup.style.display = rolSelect.value === "MAYORDOMO" ? "block" : "none";
-          });
-        }
       });
 
       /* Nueva finca */

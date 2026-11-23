@@ -79,7 +79,7 @@ export const FincaDetalleView = (container, { id }) => {
   };
 
   const abrirModalEditar = () => {
-    const { usuariosRegistrados } = store.getState();
+    const { fincas = [], usuariosRegistrados = [] } = store.getState();
     const mayordomoActual = usuariosRegistrados.find((u) => u.finca_id === finca.id);
     const mayordomosDisponibles = usuariosRegistrados.filter(
       (u) => u.rol === "MAYORDOMO" && (!u.finca_id || u.finca_id === null || u.id === mayordomoActual?.id)
